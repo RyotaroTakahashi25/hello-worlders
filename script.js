@@ -50,13 +50,13 @@ submitButton.addEventListener('click', () => {
     // 答えが合っているかチェック
     if (userAnswer === correctAnswer) {
         // 正解だった場合
-        resultMessageElement.textContent = "🎉 正解！ 🎉";
+        resultMessageElement.textContent = "よくやった。買い物を続けるがいい";
         resultMessageElement.style.color = "green"; // 文字を緑色に
         // 1秒後に新しい問題を作る
         setTimeout(createNewQuestion, 1000);
     } else {
         // 不正解だった場合
-        resultMessageElement.textContent = "😥 ちがうよ 😥";
+        resultMessageElement.textContent = "そんな寝ぼけた頭でamazonを開いていたのかい";
         resultMessageElement.style.color = "red"; // 文字を赤色に
     }
 });
