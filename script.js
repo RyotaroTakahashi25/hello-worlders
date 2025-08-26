@@ -24,8 +24,8 @@ let correctAnswer; // 正解の答えを保存しておく変数
 // 新しい問題を作成して画面に表示する関数
 function createNewQuestion() {
     // 1から10までのランダムな数字を2つ作る
-    const randomNum1 = Math.floor(Math.random() * 10) + 1;
-    const randomNum2 = Math.floor(Math.random() * 10) + 1;
+    const randomNum1 = Math.floor(Math.random() * 1000) + 1;
+    const randomNum2 = Math.floor(Math.random() * 1000) + 1;
 
     // 作った数字を画面に表示する
     num1Element.textContent = randomNum1;
@@ -53,10 +53,10 @@ submitButton.addEventListener('click', () => {
         resultMessageElement.textContent = "よくやった。買い物を続けるがいい";
         resultMessageElement.style.color = "green"; // 文字を緑色に
         // 1秒後に新しい問題を作る
-        setTimeout(createNewQuestion, 1000);
+        setTimeout(createNewQuestion, 3000);
     } else {
         // 不正解だった場合
-        resultMessageElement.textContent = "そんな寝ぼけた頭でamazonを開いていたのかい";
+        resultMessageElement.textContent = "そんな寝ぼけた頭でamazonを開いていたのかい？";
         resultMessageElement.style.color = "red"; // 文字を赤色に
     }
 });
