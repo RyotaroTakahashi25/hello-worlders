@@ -1,2 +1,31 @@
-<h1>Hello Git</h1>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>計算ミニゲーム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
+    <div id="game-container">
+        <h1>かんたん計算ゲーム！</h1>
+        <p>下の問題に答えてね。</p>
+        
+        <p id="question-area">
+            <span id="num1">0</span>
+            +
+            <span id="num2">0</span>
+            = ?
+        </p>
+        
+        <input type="number" id="answer-input" placeholder="答えを入力">
+        
+        <button id="submit-button">答える！</button>
+        
+        <p id="result-message"></p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
