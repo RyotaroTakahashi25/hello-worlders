@@ -11,7 +11,12 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["index.html"],
+      "resources": [
+        "index.html",
+        "quiz_game.html",
+        "game_logic.js",
+        "quiz_logic.js" 
+      ],
       "matches": ["<all_urls>"]
     }
   ]

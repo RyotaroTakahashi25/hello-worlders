@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>計算クイズ</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* このページだけで使う簡単なスタイル */
+    #question { font-size: 2em; margin: 20px; }
+    #answer { font-size: 1.5em; padding: 10px; width: 100px; text-align: center; }
+    #submitAnswer { font-size: 1.2em; padding: 10px 20px; margin-left: 10px; }
+    #result { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>ミッション: 計算クイズ！</h1>
+  <p>足し算をクリアしてミッションを達成しよう！</p>
+
+  <div id="question">12 + 5 = ?</div>
+  <input type="number" id="answer" placeholder="答え">
+  <button id="submitAnswer">回答する</button>
+
+  <p id="result"></p>
+
+  <button id="missionClearBtn" style="display:none;">ミッションクリア！</button>
+
+  <script src="game_logic.js"></script>
+  
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+
+    const questionEl = document.getElementById('question');
+    const answerEl = document.getElementById('answer');
+    const submitBtn = document.getElementById('submitAnswer');
+    const resultEl = document.getElementById('result');
+    const missionClearBtn = document.getElementById('missionClearBtn');
+
+    // 簡単な問題（答えは17）
+    const correctAnswer = 17;
+
+    submitBtn.addEventListener('click', () => {
+      const userAnswer = parseInt(answerEl.value, 10);
+
+      if (userAnswer === correctAnswer) {
+        resultEl.textContent = "正解！おめでとう！";
+        resultEl.style.color = "green";
+        missionClearBtn.style.display = 'block'; // 正解したらクリアボタンを表示
+        // 回答欄を無効化
+        answerEl.disabled = true;
+        submitBtn.disabled = true;
+      } else {
+        resultEl.textContent = "不正解！もう一度考えてみよう。";
+        resultEl.style.color = "red";
+      }
+    });
+    });
+  </script>
+
+<script src="game_logic.js"></script>
+  
+  <script src="quiz_logic.js"></script> </body>
+</html>

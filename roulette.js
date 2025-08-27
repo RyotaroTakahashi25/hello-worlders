@@ -3,9 +3,21 @@ window.addEventListener("DOMContentLoaded", () => {
   const ctx = canvas.getContext("2d");
   const spinBtn = document.getElementById("spinBtn");
 
+    // ページのURLから元のAmazon商品URLを取得
+  const params = new URLSearchParams(window.location.search);
+  const productUrl = params.get("product");
+
   // ルーレットの項目（ミニゲーム名）
-  const games = ["記憶力ゲーム", "計算クイズ", "タイピング", "間違い探し", "連打ゲーム", "反射神経ゲーム"];
-  const colors = ["#ef476f", "#ffd166", "#06d6a0", "#118ab2", "#073b4c", "#f78c6b"];
+  const games = ["計算クイズ"];
+  const colors = [ "#06d6a0"];
+
+    // ゲーム名とHTMLファイル名を対応付けるオブジェクトを作成
+  const gameFiles = {
+    "計算クイズ": "quiz_game.html",        // これ以降のファイルは後ほど作成します
+    // "タイピング": "typing_game.html",
+    // "間違い探し": "spot_the_difference.html",
+    // "反射神経ゲーム": "reaction_game.html"
+  };
 
   const arc = (2 * Math.PI) / games.length;
   let startAngle = 0;
@@ -51,27 +63,32 @@ window.addEventListener("DOMContentLoaded", () => {
     requestAnimationFrame(rotate);
   }
 
-  // 回転停止後の処理
+ // 回転停止後の処理をページ移動に変更
   function stopRotate() {
-    clearTimeout(spinTimeout);
     const degrees = (startAngle * 180) / Math.PI + 90;
     const arcd = (arc * 180) / Math.PI;
     const index = Math.floor((360 - (degrees % 360)) / arcd);
-    ctx.save();
-
-    // 選ばれたゲームをアラートで表示（将来的にはページ遷移）
     const selectedGame = games[index];
-    alert(`挑戦するゲームは「${selectedGame}」だ！`);
 
-    // TODO: ここに選ばれたゲームのページに遷移する処理を書く
-    // window.location.href = "game_page.html?game=" + selectedGame;
+    // 選ばれたゲームに対応するファイル名を取得
+    const gameFile = gameFiles[selectedGame];
 
-    ctx.restore();
-    spinBtn.disabled = false;
+    if (gameFile && productUrl) {
+      // ゲームページのURLを作成（このとき、元のAmazon商品URLもパラメータとして渡す）
+      const nextPageUrl = `${gameFile}?product=${encodeURIComponent(productUrl)}`;
+      
+      // ユーザーが結果を確認できるよう、1秒待ってからページを移動
+      setTimeout(() => {
+        window.location.href = nextPageUrl;
+      }, 1000); // 1秒の遅延
+    } else {
+      alert("エラー: ゲームファイルまたは元のURLが見つかりません。");
+      spinBtn.disabled = false;
+    }
   }
 
+  // イージング関数
   function easeOut(t, b, c, d) {
-    // これは「Quintic ease-out」と呼ばれる計算式です
     t = t / d - 1;
     return c * (t * t * t * t * t + 1) + b;
   }
@@ -80,11 +97,10 @@ window.addEventListener("DOMContentLoaded", () => {
   spinBtn.addEventListener("click", () => {
     spinBtn.disabled = true;
     spinTime = 0;
-    spinTimeTotal = Math.random() * 1500 + 2000; // 4〜7秒で回転
-    currentAngle = Math.random() * 360 + 360; // 10〜11周回る
+    spinTimeTotal = Math.random() * 1000 + 2000;
+    currentAngle = Math.random() * 360 + 3600;
     rotate();
   });
 
-  // 初期描画
   drawRoulette();
 });
