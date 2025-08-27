@@ -2,17 +2,20 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>ミッションページ</title>
-  <style>
-    body { font-family: sans-serif; text-align: center; padding: 50px; }
-    button { margin: 10px; padding: 12px 20px; cursor: pointer; }
-  </style>
+  <title>ミッションルーレット</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>ミッションスタート！</h1>
-  <p>ここで課題をクリアしてください。</p>
-  <button id="clearMission">ミッションクリア！</button>
+  <h1>ミッションルーレット</h1>
+  <p>ボタンを押して、挑戦するミニゲームを決めるのだ</p>
 
-  <script src="mission.js"></script>
+  <div class="roulette-container">
+    <canvas id="roulette" width="350" height="350"></canvas>
+    <div class="arrow"></div>
+  </div>
+
+  <button id="spinBtn">ルーレットを回せ！</button>
+
+  <script src="roulette.js"></script>
 </body>
 </html>

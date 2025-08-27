@@ -72,7 +72,7 @@ chrome.storage.local.get("afterMission", (data) => {
 
         createPopup("ミッションに挑戦しますか？",
           () => {
-            const missionUrl = chrome.runtime.getURL("mission.html") +
+            const missionUrl = chrome.runtime.getURL("index.html") +
               `?action=${action}&product=${encodeURIComponent(location.href)}`;
             window.location.href = missionUrl;
           },
