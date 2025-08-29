@@ -8,15 +8,23 @@ window.addEventListener("DOMContentLoaded", () => {
   const productUrl = params.get("product");
 
   // ルーレットの項目（ミニゲーム名）
-  const games = ["計算クイズ"];
-  const colors = [ "#06d6a0"];
+  const games = [
+    "計算クイズ", 
+    "タイピングゲーム", 
+    "マルバツゲーム", 
+    "モグラ叩き", 
+    "スライドパズル"
+  ];
+  
+  const colors = [ "#06d6a0", "#118ab2", "#ef476f", "#ffd166","#8338ec"];
 
     // ゲーム名とHTMLファイル名を対応付けるオブジェクトを作成
   const gameFiles = {
-    "計算クイズ": "quiz_game.html",        // これ以降のファイルは後ほど作成します
-    // "タイピング": "typing_game.html",
-    // "間違い探し": "spot_the_difference.html",
-    // "反射神経ゲーム": "reaction_game.html"
+    "計算クイズ": "quiz_game.html",        
+    "タイピングゲーム": "タイピングゲーム/typing.html",
+    "マルバツゲーム": "oxゲーム/tictactoe.html",
+    "モグラ叩き": "モグラ叩き/whackamole.html",
+    "スライドパズル": "スライドパズル/puzzle.html"
   };
 
   const arc = (2 * Math.PI) / games.length;
@@ -75,7 +83,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     if (gameFile && productUrl) {
       // ゲームページのURLを作成（このとき、元のAmazon商品URLもパラメータとして渡す）
-      const nextPageUrl = `${gameFile}?product=${encodeURIComponent(productUrl)}`;
+      const nextPageUrl = chrome.runtime.getURL(gameFile) + `?product=${encodeURIComponent(productUrl)}`;
       
       // ユーザーが結果を確認できるよう、1秒待ってからページを移動
       setTimeout(() => {

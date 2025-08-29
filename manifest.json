@@ -6,7 +6,8 @@
   "content_scripts": [
     {
       "matches": ["https://www.amazon.co.jp/*"],
-      "js": ["content.js"]
+      "js": ["content.js"],
+      "css": ["style.css"]
     }
   ],
   "web_accessible_resources": [
@@ -15,7 +16,13 @@
         "index.html",
         "quiz_game.html",
         "game_logic.js",
-        "quiz_logic.js" 
+        "quiz_logic.js",
+        "style.css",
+        "タイピングゲーム/typing.html",
+        "oxゲーム/tictactoe.html",
+        "モグラ叩き/whackamole.html",
+        "スライドパズル/puzzle.html",
+        "images/binbougami_icon.png"
       ],
       "matches": ["<all_urls>"]
     }
