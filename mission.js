@@ -1,13 +1,18 @@
 window.addEventListener("DOMContentLoaded", () => {
-  const btn = document.getElementById("clearMission");
+  const btn = document.getElementById("missionClearBtn"); // ←ボタンのID修正
+  if (!btn) return; // ボタンが無ければ終了
+
   btn.addEventListener("click", () => {
     const params = new URLSearchParams(window.location.search);
-    const action = params.get("action");
     const product = params.get("product");
 
-    // ミッションクリア → 元ページに戻るときは拡張機能をスキップさせるフラグ
-    chrome.storage.local.set({ afterMission: true }, () => {
-      window.location.href = product; // 元ページに戻る
-    });
+    if (product) {
+      // 🔑 ミッションクリア → 元ページ戻るときはフラグを保存
+      chrome.storage.local.set({ afterMission: true }, () => {
+        window.location.href = product; // 元ページに戻る
+      });
+    } else {
+      alert("元のページURLが見つかりません！");
+    }
   });
 });
