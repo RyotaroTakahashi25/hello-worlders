@@ -1,6 +1,43 @@
+//★追加、GSAPの読み込み用
+(function ensureGSAP() {
+  if (typeof gsap === "undefined") {
+    console.warn("[dice-mission] GSAPが未ロードです。manifestのjs順序を確認してください。");
+  }
+})();
+
+// ★追加: 商品キーを作る関数（/dp/ASIN を優先、無ければパスで代用）
+const getProductKey = (url) => {
+  try {
+    const m = url.match(/\/dp\/([A-Z0-9]{10})/i);
+    if (m) return m[1];
+    const u = new URL(url);
+    return u.origin + u.pathname;
+  } catch {
+    return url;
+  }
+};
+
+// ★追加: クリア済みチェック（chrome.storage.local）。使えない場合は旧sessionStorageへフォールバック
+function isProductCleared(url) {
+  const key = getProductKey(url);
+  return new Promise((resolve) => {
+    try {
+      if (!chrome?.storage?.local) throw new Error("no chrome.storage");
+      chrome.storage.local.get({ cleared: {} }, ({ cleared }) => {
+        resolve(!!cleared[key]);
+      });
+    } catch (e) {
+      resolve(sessionStorage.getItem("clearedUrl") === url);
+    }
+  });
+}
+
 // ----- スタイル -----
 const style = document.createElement("style");
 style.textContent = `
+/* ★追加: 3D感を強める */
+#dice-overlay { perspective: 800px; }
+
 .speech-bubble {
   position: absolute;
   background: #fff;
@@ -207,19 +244,28 @@ function attachListeners() {
   const observer = new MutationObserver(() => {
     const cartBtn = document.getElementById("add-to-cart-button");
     const buyBtn = document.getElementById("buy-now-button");
+
+    // ★変更: ここから（クリア済み判定を chrome.storage.local で行う）
     [cartBtn, buyBtn].forEach(btn => {
       if (btn && !btn.dataset.diceAttached) {
-        btn.dataset.diceAttached = true;
+        btn.dataset.diceAttached = "true";
         const productUrl = window.location.href;
-        const cleared = sessionStorage.getItem("clearedUrl") === productUrl;
-        if (!cleared) {
-          btn.addEventListener("click", (e) => {
-            e.preventDefault();
-            initDiceFlow();
-          });
-        }
+
+        // 旧: sessionStorage 直接比較 → 新: 非同期でストレージ確認
+        isProductCleared(productUrl).then((cleared) => {
+          if (!cleared) {
+            btn.addEventListener("click", (e) => {
+              e.preventDefault();
+              initDiceFlow();
+            });
+          } else {
+            // クリア済みなら何もせず通常動作
+          }
+        });
       }
     });
+    // ★変更: ここまで
+
   });
   observer.observe(document.body, { childList: true, subtree: true });
 }

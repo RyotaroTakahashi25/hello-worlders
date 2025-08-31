@@ -3,7 +3,7 @@
   "name": "Amazon Dice Mission",
   "version": "1.0.0",
   "description": "Amazon商品ページで貧乏神サイコロ演出付きミッション",
-  "permissions": ["activeTab", "scripting"],
+  "permissions": ["activeTab", "scripting","storage"],
   "content_scripts": [
     {
       "matches": ["https://www.amazon.co.jp/*"],
