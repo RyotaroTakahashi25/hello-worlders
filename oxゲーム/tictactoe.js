@@ -8,6 +8,39 @@ let gameActive = true;
 let currentPlayer = 'o';
 let board = ['', '', '', '', '', '', '', '', ''];
 
+// ★ もとのAmazon商品URLを取得（index.html?product=... で渡される想定）
+const params = new URLSearchParams(window.location.search);
+const productUrl = params.get('product');
+
+// ★ 商品キーを作成（/dp/ASIN を優先、無ければURL全体）
+const getProductKey = (url) => {
+  const m = url?.match(/\/dp\/([A-Z0-9]{10})/i);
+  return m ? m[1] : url;
+};
+
+// ★ 「クリア済み」を保存して元ページに戻る
+const saveClearedAndReturn = () => {
+  if (!productUrl) {
+    console.warn('★ productUrl が見つかりません（クエリ ?product=... が必要）');
+    return;
+  }
+  const key = getProductKey(productUrl);
+
+  // chrome.storage.local に「商品ごとのクリア印」を保存（要 manifest: "permissions": ["storage"]）
+  if (chrome?.storage?.local) {
+    chrome.storage.local.get({ cleared: {} }, ({ cleared }) => {
+      cleared[key] = Date.now();
+      chrome.storage.local.set({ cleared }, () => {
+        // 元のAmazon商品ページへ戻る
+        window.location.href = productUrl;
+      });
+    });
+  } else {
+    // フォールバック（そのまま戻るだけ）
+    window.location.href = productUrl;
+  }
+};
+
 // 勝利条件
 const winningConditions = [
     [0, 1, 2],
@@ -50,6 +83,8 @@ const checkResult = () => {
             handleStatusDisplay(`貧乏神の勝ち！🎉`);
         } else {
             handleStatusDisplay(`あなたの勝ち！🎉`);
+            // ★ 「あなたの勝ち！」ならクリア扱い → 少し演出を見せてから戻る
+            setTimeout(saveClearedAndReturn, 1200);
         }
         gameActive = false;
         restartButton.classList.remove('hidden');
@@ -61,6 +96,10 @@ const checkResult = () => {
         handleStatusDisplay('引き分けです。');
         gameActive = false;
         restartButton.classList.remove('hidden');
+
+        // ★（任意）引き分けでもクリア扱いにしたい場合は下の行を有効化
+        // setTimeout(saveClearedAndReturn, 1200);
+
         return true;
     }
 

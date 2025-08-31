@@ -9,6 +9,37 @@ const emptyPieceIndex = 8;
 let pieces = [];
 let gameActive = false;
 
+// ★ もとのAmazon商品URLを取得（index.html?product=... で渡される）
+const params = new URLSearchParams(window.location.search);
+const productUrl = params.get('product');
+
+// ★ 商品キーを作成（/dp/ASIN を優先、無ければURL全体）
+const getProductKey = (url) => {
+  const m = url?.match(/\/dp\/([A-Z0-9]{10})/i);
+  return m ? m[1] : url;
+};
+
+// ★ 「クリア済み」を保存して元ページへ戻る
+const saveClearedAndReturn = () => {
+  if (!productUrl) {
+    console.warn('★ productUrl が見つかりません（?product=... が必要）');
+    return;
+  }
+  const key = getProductKey(productUrl);
+
+  if (chrome?.storage?.local) {
+    chrome.storage.local.get({ cleared: {} }, ({ cleared }) => {
+      cleared[key] = Date.now();
+      chrome.storage.local.set({ cleared }, () => {
+        window.location.href = productUrl; // 元のAmazon商品ページへ
+      });
+    });
+  } else {
+    // フォールバック
+    window.location.href = productUrl;
+  }
+};
+
 // パズルのピースを生成
 const createPieces = () => {
     puzzleBoard.innerHTML = '';
@@ -79,6 +110,9 @@ const checkWin = () => {
         messageDisplay.textContent = '🎉 クリアおめでとうございます！ 🎉';
         document.querySelector('.puzzle-piece.empty').style.backgroundImage = `url('good_binbougami.png')`;
         document.querySelector('.puzzle-piece.empty').classList.remove('empty');
+
+        // ★ ちょっと演出を見せてから元ページへ戻る
+        setTimeout(saveClearedAndReturn, 1200);
     }
 };
 

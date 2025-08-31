@@ -21,6 +21,37 @@ let timerId = null;
 let spawnId = null;
 let isGameActive = false;
 
+// ★ もとのAmazon商品URLを取得（index.html?product=... で渡される）
+const params = new URLSearchParams(window.location.search);
+const productUrl = params.get('product');
+
+// ★ 商品キーを作成（/dp/ASIN を優先、無ければURL全体）
+const getProductKey = (url) => {
+  const m = url?.match(/\/dp\/([A-Z0-9]{10})/i);
+  return m ? m[1] : url;
+};
+
+// ★ 「クリア済み」を保存して元ページへ戻る
+const saveClearedAndReturn = () => {
+  if (!productUrl) {
+    console.warn('★ productUrl が見つかりません（?product=... が必要）');
+    return;
+  }
+  const key = getProductKey(productUrl);
+
+  if (chrome?.storage?.local) {
+    chrome.storage.local.get({ cleared: {} }, ({ cleared }) => {
+      cleared[key] = Date.now();
+      chrome.storage.local.set({ cleared }, () => {
+        window.location.href = productUrl; // 元のAmazon商品ページへ
+      });
+    });
+  } else {
+    // フォールバック
+    window.location.href = productUrl;
+  }
+};
+
 // 穴を動的に生成
 const holes = [];
 for (let i = 0; i < HOLE_COUNT; i++) {
@@ -70,7 +101,6 @@ const handleMoleClick = (event) => {
 
     // 叩いた貧乏神をすぐに非表示にする
     clickedMole.classList.remove('visible');
-    // スコアがマイナスの場合は、スタイルを変更するなどの追加演出も可能です
   }
 };
 
@@ -117,6 +147,9 @@ const endGame = () => {
 
   if (score >= TARGET_SCORE) {
     gameMessage.textContent = '🎉ゲームクリア！おめでとうございます！🎉';
+    // ★ ちょっと演出を見せてから、クリア印を保存して元ページへ戻る
+    setTimeout(saveClearedAndReturn, 1200);
+    return; // ★ 戻る前に再初期化しない
   } else {
     gameMessage.textContent = '残念…ゲームオーバーです。';
   }

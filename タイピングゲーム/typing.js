@@ -27,6 +27,37 @@ let currentQuestionIndex = 0;
 let currentWord = {};
 let questionOrder = [];
 
+// ★ もとのAmazon商品URLを取得（index.html?product=... で渡される）
+const params = new URLSearchParams(window.location.search);
+const productUrl = params.get('product');
+
+// ★ 商品キーを作成（/dp/ASIN を優先、無ければURL全体）
+const getProductKey = (url) => {
+  const m = url?.match(/\/dp\/([A-Z0-9]{10})/i);
+  return m ? m[1] : url;
+};
+
+// ★ 「クリア済み」を保存して元ページへ戻る
+const saveClearedAndReturn = () => {
+  if (!productUrl) {
+    console.warn('★ productUrl が見つかりません（?product=... が必要）');
+    return;
+  }
+  const key = getProductKey(productUrl);
+
+  if (chrome?.storage?.local) {
+    chrome.storage.local.get({ cleared: {} }, ({ cleared }) => {
+      cleared[key] = Date.now();
+      chrome.storage.local.set({ cleared }, () => {
+        window.location.href = productUrl; // 元のAmazon商品ページへ
+      });
+    });
+  } else {
+    // フォールバック
+    window.location.href = productUrl;
+  }
+};
+
 // ゲームの初期化
 const initializeGame = () => {
     gameActive = true;
@@ -136,6 +167,8 @@ const endGame = (isSuccess) => {
     if (isSuccess) {
         resultTextEl.textContent = '🎉 素晴らしい！全問正解です！ 🎉';
         resultTextEl.style.color = '#2ecc71';
+        // ★ 少し演出を見せてから、クリア印を保存して元ページへ戻る
+        setTimeout(saveClearedAndReturn, 1200);
     } else {
         resultTextEl.textContent = '残念…もう一度挑戦してみましょう。';
         resultTextEl.style.color = '#e74c3c';
