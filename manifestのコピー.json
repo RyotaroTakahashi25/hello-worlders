@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Amazon Dice Mission",
+  "version": "1.0.0",
+  "description": "Amazon商品ページで貧乏神サイコロ演出付きミッション",
+  "permissions": ["activeTab", "scripting","storage"],
+  "content_scripts": [
+    {
+      "matches": ["https://www.amazon.co.jp/*"],
+      "js": ["libs/gsap.min.js", "content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "images/face_strong.jpg",
+        "images/face_mid1.jpg",
+        "images/face_mid2.jpg",
+        "images/face_weak1.jpg",
+        "images/face_weak2.jpg",
+        "images/face_weak3.jpg",
+        "index.html",
+        "quiz_game.html"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
