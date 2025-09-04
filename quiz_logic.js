@@ -10,13 +10,13 @@ window.addEventListener('DOMContentLoaded', () => {
     const userAnswer = parseInt(answerEl.value, 10);
     if (userAnswer === correctAnswer) {
       resultEl.textContent = "正解！おめでとう！";
-      resultEl.style.color = "green";
+      resultEl.style.color = "#2ecc71"; // 統一した緑色
       missionClearBtn.style.display = 'block';
       answerEl.disabled = true;
       submitBtn.disabled = true;
     } else {
       resultEl.textContent = "不正解！もう一度考えてみよう。";
-      resultEl.style.color = "red";
+      resultEl.style.color = "#e74c3c"; // 統一した赤色
     }
   });
 
@@ -26,7 +26,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const productUrl = params.get("product");
     if (productUrl) {
       // ASIN を抽出
-      const match = productUrl.match(/\/dp\/([A-Z0-9]{10})/);
+      const match = productUrl.match(/\b([A-Z0-9]{10})\b/);
       const asin = match ? match[1] : null;
 
       if (asin) {
@@ -37,7 +37,7 @@ window.addEventListener('DOMContentLoaded', () => {
       // Amazonに戻る
       window.location.href = productUrl;
     } else {
-      alert("戻るURLが見つかりませんでした");
+      alert("戻るURLが見つかりませんでした！");
     }
   });
 });

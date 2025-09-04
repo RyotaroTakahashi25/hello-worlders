@@ -89,6 +89,48 @@ style.textContent = `
   object-fit: cover;
   background: white; /* 貧乏神の余白だけ白く */
 }
+/* メーターのスタイル */
+.savings-meter-container {
+  display: none; /* デフォルトで非表示 */
+  flex-direction: column;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5); /* 半透明黒色 */
+  border-radius: 10px;
+  padding: 10px 15px;
+  color: white;
+  font-family: sans-serif;
+  width: 250px; /* ポップアップの幅に合わせる */
+  z-index: 10002; /* 吹き出しよりZ-indexを高く */
+  position: absolute; /* absoluteで配置 */
+}
+.meter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 5px;
+}
+.meter-title {
+    font-size: 14px;
+    font-weight: bold;
+}
+.meter-icon {
+    width: 30px;
+    height: 30px;
+    margin-left: 10px;
+}
+.meter-bar {
+    width: 100%;
+    height: 15px;
+    display: flex;
+    border-radius: 5px;
+    overflow: hidden;
+    background-color: #ccc;
+}
+.meter-segment {
+    flex-grow: 1;
+    height: 100%;
+}
 `;
 document.head.appendChild(style);
 
@@ -99,7 +141,9 @@ const characters = [
   { name: "小貧乏神2", face: chrome.runtime.getURL("images/face_mid2.jpg"), lines: ["へっへっへ！今日はツイてないね！","おっと〜？お前さんの運、試させてもらうぜ！","ワシに勝てば少しは楽になるかもな〜"] },
   { name: "見習い貧乏神1", face: chrome.runtime.getURL("images/face_weak1.jpg"), lines: ["えへへ、ボク弱いけどよろしく！","うひゃ〜！ミッションって何するの？","あわわ…がんばらなきゃ…"] },
   { name: "見習い貧乏神2", face: chrome.runtime.getURL("images/face_weak2.jpg"), lines: ["えへへ、ボク弱いけどよろしく！","うひゃ〜！ミッションって何するの？","あわわ…がんばらなきゃ…"] },
-  { name: "見習い貧乏神3", face: chrome.runtime.getURL("images/face_weak3.jpg"), lines: ["えへへ、ボク弱いけどよろしく！","うひゃ〜！ミッションって何するの？","あわわ…がんばらなきゃ…"] }
+  { name: "見習い貧乏神3", face: chrome.runtime.getURL("images/face_weak3.jpg"), lines: ["えへへ、ボク弱いけどよろしく！","うひゃ〜！ミッションって何するの？","あわわ…がんばらなきゃ…"] },
+  // ★追加: キングボンビーの定義
+  { name: "キングボンビー", face: chrome.runtime.getURL("images/face_strong.jpg"), lines: ["買い物カゴは、お前の欲望の墓場じゃ！罰として、200文字で今日買ったものの必要性を説明し、反省文を提出するんじゃな！ワッハッハ！"] }
 ];
 
 // ----- オーバーレイ作成 -----
@@ -115,7 +159,6 @@ function createOverlay() {
   overlay.style.display = "flex";
   overlay.style.alignItems = "center";
   overlay.style.justifyContent = "center";
-  overlay.style.flexDirection = "column";
   overlay.style.zIndex = 9999;
   document.body.appendChild(overlay);
   return overlay;
@@ -127,7 +170,8 @@ function createDice(overlay) {
   dice.className = "dice";
 
   const t = 60; // サイコロ半分サイズ
-  characters.forEach((char, i) => {
+  // キングボンビーはサイコロの面から除外するため、characters.slice(0, 6)を使用
+  characters.slice(0, 6).forEach((char, i) => {
     const face = document.createElement("div");
     face.className = "dice-face";
     const img = document.createElement("img");
@@ -184,7 +228,7 @@ function showCharacterFace(overlay, roll) {
 
   const img = document.createElement("img");
   img.src = character.face;
-  img.style.position = "fixed";
+  img.style.position = "absolute";
   img.style.top = "50%";
   img.style.left = "50%";
   img.style.transform = "translate(-50%, -50%)";
@@ -199,64 +243,207 @@ function showCharacterFace(overlay, roll) {
     { scale: 1.2, opacity: 1, duration: 0.8, ease: "back.out(2)" }
   );
 
-  setTimeout(() => showCharacterDialog(overlay, character, img), 1000);
+  setTimeout(() => showCharacterDialog(overlay, character, img, roll), 1000);
 }
 
-// ----- 吹き出し -----
-function showCharacterDialog(overlay, character, imgElement) {
+// ★修正: showCharacterDialogにrollを追加して、キングボンビーの吹き出しを表示
+function showCharacterDialog(overlay, character, imgElement, roll) {
   const dialog = document.createElement("div");
   dialog.className = "speech-bubble";
   const line = character.lines[Math.floor(Math.random() * character.lines.length)];
   dialog.textContent = `${character.name}: ${line}`;
 
-  const rect = imgElement.getBoundingClientRect();
-  dialog.style.left = rect.right + 20 + "px";
-  dialog.style.top = rect.top + "px";
+  const imgRect = imgElement.getBoundingClientRect();
+  dialog.style.left = imgRect.right + 20 + "px";
+  dialog.style.top = imgRect.top + "px";
 
-  const yesBtn = document.createElement("button");
-  yesBtn.textContent = "はい";
-  yesBtn.onclick = () => { 
-    const productUrl = window.location.href;
-    window.location.href = chrome.runtime.getURL(`index.html?product=${encodeURIComponent(productUrl)}`);
-  };
+  // キングボンビーの場合は、ボタンのテキストと動作を変更
+  if (character.name === "キングボンビー") {
+    const okBtn = document.createElement("button");
+    okBtn.textContent = "わかった！";
+    okBtn.onclick = () => {
+      overlay.remove();
+    };
+    dialog.appendChild(document.createElement("br"));
+    dialog.appendChild(okBtn);
+  } else {
+    const yesBtn = document.createElement("button");
+    yesBtn.textContent = "はい";
+    yesBtn.onclick = () => {
+      chrome.storage.local.get(['meterLevel'], (result) => {
+        let currentLevel = result.meterLevel || 0;
+        currentLevel++;
+        chrome.storage.local.set({ meterLevel: currentLevel }, () => {
+          updateSavingsMeter(currentLevel);
+          
+          if (currentLevel >= 4) { // 4回目でキングボンビー
+              checkKingBonbi(overlay, currentLevel);
+          } else {
+              const productUrl = window.location.href;
+              window.location.href = chrome.runtime.getURL(`index.html?product=${encodeURIComponent(productUrl)}`);
+          }
+        });
+      });
+    };
 
-  const noBtn = document.createElement("button");
-  noBtn.textContent = "いいえ";
-  noBtn.onclick = () => { overlay.remove(); };
+    const noBtn = document.createElement("button");
+    noBtn.textContent = "いいえ";
+    noBtn.onclick = () => { 
+      chrome.storage.local.get(['meterLevel'], (result) => {
+        let currentLevel = result.meterLevel || 0;
+        currentLevel++;
+        chrome.storage.local.set({ meterLevel: currentLevel }, () => {
+          updateSavingsMeter(currentLevel); 
+          
+          if (currentLevel >= 4) { // 4回目でキングボンビー
+              checkKingBonbi(overlay, currentLevel);
+          } else {
+              overlay.remove();
+          }
+        });
+      });
+    };
 
-  dialog.appendChild(document.createElement("br"));
-  dialog.appendChild(yesBtn);
-  dialog.appendChild(noBtn);
+    dialog.appendChild(document.createElement("br"));
+    dialog.appendChild(yesBtn);
+    dialog.appendChild(noBtn);
+  }
 
   overlay.appendChild(dialog);
   gsap.fromTo(dialog, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.6, ease: "back.out(1.7)" });
+
+  const meterContainer = document.getElementById('savings-meter-container');
+  chrome.storage.local.get(['meterLevel'], (result) => {
+    const currentLevel = result.meterLevel || 0;
+    if (currentLevel > 0) {
+      meterContainer.style.display = 'flex';
+      const dialogRect = dialog.getBoundingClientRect();
+      meterContainer.style.left = dialogRect.left + "px";
+      meterContainer.style.top = (dialogRect.bottom + 10) + "px";
+    } else {
+        meterContainer.style.display = 'none';
+    }
+    updateSavingsMeter(currentLevel);
+  });
 }
 
-// ----- 流れ開始 -----
+// ★追加: キングボンビー登場をチェックする関数
+function checkKingBonbi(overlay, level) {
+  if (level >= 4) {
+    chrome.storage.local.set({ meterLevel: 0 }, () => {
+      updateSavingsMeter(0); // メーターをリセット
+      const kingBonbi = characters[6]; // キングボンビー
+      const img = document.createElement("img");
+      img.src = kingBonbi.face;
+      img.style.position = "absolute";
+      img.style.top = "50%";
+      img.style.left = "50%";
+      img.style.transform = "translate(-50%, -50%)";
+      img.style.width = "250px";
+      img.style.zIndex = 10000;
+      img.style.opacity = 0;
+      overlay.appendChild(img);
+      gsap.fromTo(img,
+          { scale: 0, opacity: 0 },
+          { scale: 1.2, opacity: 1, duration: 0.8, ease: "back.out(2)" }
+      );
+      setTimeout(() => showCharacterDialog(overlay, kingBonbi, img), 1000);
+    });
+  }
+}
+
+// 節約メーター作成関数
+function createSavingsMeter() {
+    let popup = document.getElementById('savings-meter-container');
+    if (popup) return popup;
+
+    popup = document.createElement('div');
+    popup.className = 'savings-meter-container';
+    popup.id = 'savings-meter-container';
+
+    const header = document.createElement('div');
+    header.className = 'meter-header';
+
+    const title = document.createElement('div');
+    title.className = 'meter-title';
+    title.textContent = '浪費額メーター';
+
+    const icon = document.createElement('img');
+    icon.className = 'meter-icon';
+    icon.src = chrome.runtime.getURL('images/face_weak1.jpg');
+
+    header.appendChild(title);
+    header.appendChild(icon);
+
+    const meterBar = document.createElement('div');
+    meterBar.className = 'meter-bar';
+    meterBar.id = 'savings-meter-bar';
+
+    for (let i = 0; i < 4; i++) {
+        const segment = document.createElement('div');
+        segment.className = 'meter-segment';
+        segment.id = `segment-${i + 1}`;
+        meterBar.appendChild(segment);
+    }
+
+    popup.appendChild(header);
+    popup.appendChild(meterBar);
+
+    document.body.appendChild(popup);
+    return popup;
+}
+
+// メーター更新関数
+function updateSavingsMeter(level) {
+    const segments = document.querySelectorAll('.meter-segment');
+    segments.forEach((segment, index) => {
+        if (index < level) {
+            switch(index) {
+                case 0:
+                    segment.style.backgroundColor = 'rgba(152, 251, 152, 0.8)';
+                    break;
+                case 1:
+                    segment.style.backgroundColor = 'rgba(255, 255, 153, 0.8)';
+                    break;
+                case 2:
+                    segment.style.backgroundColor = 'rgba(255, 165, 0, 0.8)';
+                    break;
+                case 3:
+                    segment.style.backgroundColor = 'rgba(255, 102, 102, 0.8)';
+                    break;
+            }
+        } else {
+            segment.style.backgroundColor = 'rgba(204, 204, 204, 0.8)';
+        }
+    });
+}
+
+// ----- 流れ開始 ----
 function initDiceFlow() {
   const overlay = createOverlay();
   const dice = createDice(overlay);
   rollDiceAnimation(dice, overlay);
 }
 
-// ----- ボタン監視 -----
+// ----- ボタン監視 ----
 function attachListeners() {
+  createSavingsMeter(); 
+  
   const observer = new MutationObserver(() => {
-    const cartBtn = document.getElementById("add-to-cart-button");
-    const buyBtn = document.getElementById("buy-now-button");
+    // 両方のボタンを監視するようにセレクターを修正
+    const cartBtn = document.querySelector("#add-to-cart-button, #desktop-buybox-add-to-cart-button");
+    const buyBtn = document.querySelector("#buy-now-button");
 
-    // ★変更: ここから（クリア済み判定を chrome.storage.local で行う）
     [cartBtn, buyBtn].forEach(btn => {
       if (btn && !btn.dataset.diceAttached) {
         btn.dataset.diceAttached = "true";
         const productUrl = window.location.href;
 
-        // 旧: sessionStorage 直接比較 → 新: 非同期でストレージ確認
         isProductCleared(productUrl).then((cleared) => {
           if (!cleared) {
             btn.addEventListener("click", (e) => {
-              e.preventDefault();
-              initDiceFlow();
+              e.preventDefault(); // デフォルトの動作をキャンセル
+              initDiceFlow(); // ミッションを開始
             });
           } else {
             // クリア済みなら何もせず通常動作
@@ -264,9 +451,8 @@ function attachListeners() {
         });
       }
     });
-    // ★変更: ここまで
-
   });
+  // ページ全体を監視
   observer.observe(document.body, { childList: true, subtree: true });
 }
 

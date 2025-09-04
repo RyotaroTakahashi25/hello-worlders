@@ -9,17 +9,17 @@ const emptyPieceIndex = 8;
 let pieces = [];
 let gameActive = false;
 
-// ★ もとのAmazon商品URLを取得（index.html?product=... で渡される）
+// もとのAmazon商品URLを取得（index.html?product=... で渡される）
 const params = new URLSearchParams(window.location.search);
 const productUrl = params.get('product');
 
-// ★ 商品キーを作成（/dp/ASIN を優先、無ければURL全体）
+// 商品キーを作成（/dp/ASIN を優先、無ければURL全体）
 const getProductKey = (url) => {
   const m = url?.match(/\/dp\/([A-Z0-9]{10})/i);
   return m ? m[1] : url;
 };
 
-// ★ 「クリア済み」を保存して元ページへ戻る
+// 「クリア済み」を保存して元ページへ戻る
 const saveClearedAndReturn = () => {
   if (!productUrl) {
     console.warn('★ productUrl が見つかりません（?product=... が必要）');
@@ -46,43 +46,51 @@ const createPieces = () => {
     pieces = [];
     for (let i = 0; i < BOARD_SIZE; i++) {
         const piece = document.createElement('div');
-        piece.classList.add('puzzle-piece');
+        piece.className = 'puzzle-piece';
         piece.dataset.index = i;
+        
         if (i === emptyPieceIndex) {
             piece.classList.add('empty');
         } else {
-            const row = Math.floor(i / 3);
             const col = i % 3;
+            const row = Math.floor(i / 3);
             piece.style.backgroundPosition = `-${col * 100}px -${row * 100}px`;
         }
+        
         pieces.push(piece);
-        puzzleBoard.appendChild(piece);
     }
 };
 
 // ピースをシャッフル
-const shufflePieces = (array) => {
-    let currentIndex = array.length, randomIndex;
-    while (currentIndex !== 0) {
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex--;
-        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+const shufflePieces = (arr) => {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
     }
-    // 空きマスを最後に移動
-    const emptyPiece = array.splice(array.findIndex(p => p.classList.contains('empty')), 1)[0];
-    array.push(emptyPiece);
-    return array;
+    return arr;
+};
+
+// パズルボードの更新
+const updateBoard = () => {
+    puzzleBoard.innerHTML = '';
+    pieces.forEach(piece => {
+        puzzleBoard.appendChild(piece);
+    });
 };
 
 // ピースの移動
-const movePiece = (clickedPiece) => {
+const handlePieceClick = (e) => {
     if (!gameActive) return;
 
-    const emptyPiece = document.querySelector('.puzzle-piece.empty');
+    const clickedPiece = e.target;
+    if (!clickedPiece.classList.contains('puzzle-piece') || clickedPiece.classList.contains('empty')) {
+        return;
+    }
+
     const clickedIndex = pieces.indexOf(clickedPiece);
+    const emptyPiece = document.querySelector('.puzzle-piece.empty');
     const emptyIndex = pieces.indexOf(emptyPiece);
 
-    // 隣接判定
     const isAdjacent = (index1, index2) => {
         const row1 = Math.floor(index1 / 3);
         const col1 = index1 % 3;
@@ -108,10 +116,10 @@ const checkWin = () => {
     if (isSolved) {
         gameActive = false;
         messageDisplay.textContent = '🎉 クリアおめでとうございます！ 🎉';
-        document.querySelector('.puzzle-piece.empty').style.backgroundImage = `url('good_binbougami.png')`;
+        document.querySelector('.puzzle-piece.empty').style.backgroundImage = `url('background-image.jpeg')`;
         document.querySelector('.puzzle-piece.empty').classList.remove('empty');
 
-        // ★ ちょっと演出を見せてから元ページへ戻る
+        // ちょっと演出を見せてから元ページへ戻る
         setTimeout(saveClearedAndReturn, 1200);
     }
 };
@@ -125,21 +133,9 @@ const startGame = () => {
     updateBoard();
 };
 
-// パズルボードの更新
-const updateBoard = () => {
-    puzzleBoard.innerHTML = '';
-    pieces.forEach(piece => {
-        puzzleBoard.appendChild(piece);
-    });
-};
-
 // イベントリスナー
 restartButton.addEventListener('click', startGame);
-puzzleBoard.addEventListener('click', (e) => {
-    if (e.target.classList.contains('puzzle-piece') && !e.target.classList.contains('empty')) {
-        movePiece(e.target);
-    }
-});
+puzzleBoard.addEventListener('click', handlePieceClick);
 
-// 初期表示
+// 最初のゲーム開始
 startGame();

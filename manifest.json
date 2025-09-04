@@ -20,7 +20,8 @@
         "images/face_weak2.jpg",
         "images/face_weak3.jpg",
         "index.html",
-        "quiz_game.html"
+        "quiz_game.html",
+        "style.css"  // ★追加: スタイルシートを読み込み可能にする
       ],
       "matches": ["<all_urls>"]
     }

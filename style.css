@@ -51,29 +51,49 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.binbougami-meter {
+/* ★追加: 節約メーターのスタイル */
+.savings-meter-popup {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background-color: #f0f0f0;
-    border: 1px solid #ccc;
+    background-color: rgba(0, 0, 0, 0.5); /* 半透明黒色 */
     border-radius: 10px;
     padding: 10px 15px;
     display: flex;
-    align-items: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    flex-direction: column;
     z-index: 10000;
+    color: white;
     font-family: sans-serif;
-    color: #333;
-    font-size: 1.1em;
 }
 
-.binbougami-icon {
+.meter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.meter-title {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.meter-icon {
     width: 30px;
     height: 30px;
-    margin-right: 10px;
+    margin-left: 10px;
 }
 
-.savings-counter {
-    font-weight: bold;
+.meter-bar {
+    width: 150px;
+    height: 15px;
+    display: flex;
+    border-radius: 5px;
+    overflow: hidden;
+    background-color: #ccc;
+}
+
+.meter-segment {
+    flex-grow: 1;
+    height: 100%;
 }
