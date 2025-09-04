@@ -1,3 +1,4 @@
+
 //★追加、GSAPの読み込み用
 (function ensureGSAP() {
   if (typeof gsap === "undefined") {
@@ -295,7 +296,7 @@ dialog.appendChild(btnWrap);
 // ----- 流れ開始 -----
 function initDiceFlow() {
   const overlay = createOverlay();
-  overlay.style.background = "rgba(128,0,128,0.9)"; // 紫の背景に変更
+  overlay.style.background = "rgba(57, 20, 57, 0.95)"; // 紫の背景に変更
   const dice = createDice(overlay);
   rollDiceAnimation(dice, overlay);
 }
