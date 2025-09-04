@@ -14,11 +14,11 @@
     {
       "resources": [
         "images/face_strong.jpg",
-        "images/face_mid1.jpg",
-        "images/face_mid2.jpg",
-        "images/face_weak1.jpg",
-        "images/face_weak2.jpg",
-        "images/face_weak3.jpg",
+        "images/face_mid1.png",
+        "images/face_mid2.png",
+        "images/face_weak1.png",
+        "images/face_weak2.png",
+        "images/face_weak3.png",
         "index.html",
         "quiz_game.html"
       ],

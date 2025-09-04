@@ -42,16 +42,16 @@ style.textContent = `
   position: absolute;
   background: #fff;
   border-radius: .4em;
-  padding: 1em;
-  max-width: 250px;
-  font-size: 14px;
+  padding: 1.5em;
+  max-width: 500px;
+  font-size: 15px;
   text-align: center;
   z-index: 10001;
 }
 #dice-overlay button {
   margin: 5px;
-  padding: 5px 10px;
-  font-size: 13px;
+  padding: 8px 25px;
+  font-size: 12px;
   cursor: pointer;
   border-radius: 4px;
 }
@@ -82,11 +82,13 @@ style.textContent = `
   border: 1px solid #999;
   border-radius: 8px;
   overflow: hidden;
+  object-fit: contain;
 }
+
 .dice-face img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   background: white; /* 貧乏神の余白だけ白く */
 }
 `;
@@ -94,12 +96,12 @@ document.head.appendChild(style);
 
 // ----- キャラ定義 -----
 const characters = [
-  { name: "大貧乏神", face: chrome.runtime.getURL("images/face_strong.jpg"), lines: ["我が現れし時、汝の運命は決した！","ククク…愚かなる挑戦者よ、覚悟はあるか？","よかろう、我を倒してみよ！"] },
-  { name: "小貧乏神1", face: chrome.runtime.getURL("images/face_mid1.jpg"), lines: ["へっへっへ！今日はツイてないね！","おっと〜？お前さんの運、試させてもらうぜ！","ワシに勝てば少しは楽になるかもな〜"] },
-  { name: "小貧乏神2", face: chrome.runtime.getURL("images/face_mid2.jpg"), lines: ["へっへっへ！今日はツイてないね！","おっと〜？お前さんの運、試させてもらうぜ！","ワシに勝てば少しは楽になるかもな〜"] },
-  { name: "見習い貧乏神1", face: chrome.runtime.getURL("images/face_weak1.jpg"), lines: ["えへへ、ボク弱いけどよろしく！","うひゃ〜！ミッションって何するの？","あわわ…がんばらなきゃ…"] },
-  { name: "見習い貧乏神2", face: chrome.runtime.getURL("images/face_weak2.jpg"), lines: ["えへへ、ボク弱いけどよろしく！","うひゃ〜！ミッションって何するの？","あわわ…がんばらなきゃ…"] },
-  { name: "見習い貧乏神3", face: chrome.runtime.getURL("images/face_weak3.jpg"), lines: ["えへへ、ボク弱いけどよろしく！","うひゃ〜！ミッションって何するの？","あわわ…がんばらなきゃ…"] }
+  { name: "ビンボゴン", face: chrome.runtime.getURL("images/face_strong.jpg"), lines: ["我が現れし時、汝の運命は決した！","ククク…愚かなる挑戦者よ、覚悟はあるか？","よかろう、我を倒してみよ！"] },
+  { name: "サイフリン", face: chrome.runtime.getURL("images/face_mid1.png"), lines: ["へっへっへ！今日はツイてないね！","おっと〜？お前さんの運、試させてもらうぜ！","ワシに勝てば少しは楽になるかもな〜"] },
+  { name: "サイフリン", face: chrome.runtime.getURL("images/face_mid2.png"), lines: ["へっへっへ！今日はツイてないね！","おっと〜？お前さんの運、試させてもらうぜ！","ワシに勝てば少しは楽になるかもな〜"] },
+  { name: "コゼニー", face: chrome.runtime.getURL("images/face_weak1.png"), lines: ["えへへ、ボク弱いけどよろしく！","うひゃ〜！ミッションって何するの？","あわわ…がんばらなきゃ…"] },
+  { name: "コゼニー", face: chrome.runtime.getURL("images/face_weak2.png"), lines: ["えへへ、ボク弱いけどよろしく！","うひゃ〜！ミッションって何するの？","あわわ…がんばらなきゃ…"] },
+  { name: "コゼニー", face: chrome.runtime.getURL("images/face_weak3.png"), lines: ["えへへ、ボク弱いけどよろしく！","うひゃ〜！ミッションって何するの？","あわわ…がんばらなきゃ…"] }
 ];
 
 // ----- オーバーレイ作成 -----
@@ -188,53 +190,112 @@ function showCharacterFace(overlay, roll) {
   img.style.top = "50%";
   img.style.left = "50%";
   img.style.transform = "translate(-50%, -50%)";
-  img.style.width = "250px";
   img.style.zIndex = 10000;
   img.style.opacity = 0;
+  img.style.maxWidth = "40vw";   // 画面幅の40%
+  img.style.maxHeight = "60vh";  // 画面高さの60%
+  img.style.width = "auto";      // アスペクト比維持
+  img.style.height = "auto";     // アスペクト比維持
+
 
   overlay.appendChild(img);
 
-  gsap.fromTo(img,
-    { scale: 0, opacity: 0 },
-    { scale: 1.2, opacity: 1, duration: 0.8, ease: "back.out(2)" }
-  );
+ // --- STEP1: 巨大化して登場 ---
+gsap.fromTo(img,
+  { scale: 0, opacity: 0 },
+  { scale: 1.5, opacity: 1, duration: 0.8, ease: "back.out(2)" }
+);
 
-  setTimeout(() => showCharacterDialog(overlay, character, img), 1000);
+// --- STEP2: 一旦消える ---
+gsap.to(img, {
+  opacity: 0,
+  duration: 0.5,
+  delay: 2,
+  onComplete: () => {
+    img.remove(); // 古い画像は消す
+
+    // --- STEP3: 吹き出し付きで再登場 ---
+    const img2 = document.createElement("img");
+    img2.src = character.face;
+    img2.style.position = "fixed";
+    img2.style.top = "50%";
+    img2.style.left = "35%";
+    img2.style.transform = "translate(-50%, -50%)";
+    img2.style.zIndex = 10000;
+    img2.style.opacity = 0;
+    img2.style.maxWidth = "40vw";
+    img2.style.maxHeight = "60vh";
+    img2.style.width = "auto";
+    img2.style.height = "auto";
+
+    overlay.appendChild(img2);
+
+    gsap.fromTo(img2,
+      { scale: 0.5, y: 50, opacity: 0 },
+      { scale: 1, y: 0, opacity: 1, duration: 0.8, ease: "back.out(1.7)" }
+    );
+
+    // 吹き出しを出す
+    showCharacterDialog(overlay, character, img2, roll);
+  }
+});
 }
 
 // ----- 吹き出し -----
-function showCharacterDialog(overlay, character, imgElement) {
+function showCharacterDialog(overlay, character, imgElement, roll) {
   const dialog = document.createElement("div");
   dialog.className = "speech-bubble";
   const line = character.lines[Math.floor(Math.random() * character.lines.length)];
   dialog.textContent = `${character.name}: ${line}`;
 
   const rect = imgElement.getBoundingClientRect();
-  dialog.style.left = rect.right + 20 + "px";
-  dialog.style.top = rect.top + "px";
+  dialog.style.position = "fixed";
+  dialog.style.left = "55%";       // キャラより右
+  dialog.style.top = "50%";        // 縦中央
+  dialog.style.transform = "translateY(-50%)";
+         // 中央揃え
 
+   // === ボタンラッパーを追加 ===
+  const btnWrap = document.createElement("div");
+  btnWrap.style.marginTop = "20px";   // 👈 テキストとボタンの間を広げる
+  btnWrap.style.textAlign = "center"; // 👈 中央寄せしたい場合
+
+  // はいボタン
   const yesBtn = document.createElement("button");
   yesBtn.textContent = "はい";
-  yesBtn.onclick = () => { 
-    const productUrl = window.location.href;
-    window.location.href = chrome.runtime.getURL(`index.html?product=${encodeURIComponent(productUrl)}`);
+  yesBtn.onclick = () => {
+    let targetUrl = null;
+    if (roll === 0) {
+      targetUrl = "https://example.com/strong"; //大ボスのルーレットファイルを挿入
+    } else if (roll === 1 || roll === 2) {
+      targetUrl = "https://example.com/mid"; //中ボスのルーレットファイルを挿入
+    } else {
+      targetUrl = chrome.runtime.getURL("index.html"); //小ボスのルーレットファイルを挿入
+    }
+    window.location.href = targetUrl;
   };
 
+  // いいえボタン
   const noBtn = document.createElement("button");
   noBtn.textContent = "いいえ";
   noBtn.onclick = () => { overlay.remove(); };
 
-  dialog.appendChild(document.createElement("br"));
-  dialog.appendChild(yesBtn);
-  dialog.appendChild(noBtn);
+  // === ラッパーにまとめる ===
+btnWrap.appendChild(yesBtn);
+btnWrap.appendChild(noBtn);
+
+// === ダイアログに追加（<br>は使わない） ===
+dialog.appendChild(btnWrap);
 
   overlay.appendChild(dialog);
   gsap.fromTo(dialog, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.6, ease: "back.out(1.7)" });
 }
 
+
 // ----- 流れ開始 -----
 function initDiceFlow() {
   const overlay = createOverlay();
+  overlay.style.background = "rgba(128,0,128,0.9)"; // 紫の背景に変更
   const dice = createDice(overlay);
   rollDiceAnimation(dice, overlay);
 }
