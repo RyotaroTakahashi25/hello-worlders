@@ -155,9 +155,9 @@ function rollDiceAnimation(dice, overlay) {
   const roll = Math.floor(Math.random() * 6);
   const finalRot = [
     {x: 0,   y: 0},
-    {x: 0,   y: 90},
-    {x: 0,   y: 180},
     {x: 0,   y: -90},
+    {x: 0,   y: 180},
+    {x: 0,   y: 90},
     {x: -90, y: 0},
     {x: 90,  y: 0},
   ];
