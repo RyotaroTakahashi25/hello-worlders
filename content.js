@@ -261,20 +261,22 @@ function showCharacterDialog(overlay, character, imgElement, roll) {
   btnWrap.style.marginTop = "20px";   // 👈 テキストとボタンの間を広げる
   btnWrap.style.textAlign = "center"; // 👈 中央寄せしたい場合
 
-  // はいボタン
+  // はいボタン ★本多変更
   const yesBtn = document.createElement("button");
   yesBtn.textContent = "はい";
   yesBtn.onclick = () => {
-    let targetUrl = null;
-    if (roll === 0) {
-      targetUrl = "https://example.com/strong"; //大ボスのルーレットファイルを挿入
-    } else if (roll === 1 || roll === 2) {
-      targetUrl = "https://example.com/mid"; //中ボスのルーレットファイルを挿入
-    } else {
-      targetUrl = chrome.runtime.getURL("index.html"); //小ボスのルーレットファイルを挿入
-    }
-    window.location.href = targetUrl;
-  };
+  const from = encodeURIComponent(window.location.href); // ← これを追加
+
+  let targetUrl;
+  if (roll === 0) {
+    targetUrl = chrome.runtime.getURL(`index.html?boss=strong&from=${from}`);
+  } else if (roll === 1 || roll === 2) {
+    targetUrl = chrome.runtime.getURL(`index.html?boss=mid&from=${from}`);
+  } else {
+    targetUrl = chrome.runtime.getURL(`index.html?boss=weak&from=${from}`);
+  }
+  window.location.href = targetUrl;
+};
 
   // いいえボタン
   const noBtn = document.createElement("button");

@@ -5,11 +5,29 @@ const startButton = document.getElementById('start-button');
 const gameMessage = document.getElementById('game-message');
 const holesContainer = document.querySelector('.holes-container');
 
-// ゲーム設定
+// ★ クエリから boss を取得
+const params = new URLSearchParams(window.location.search);
+const productUrl = params.get('product');
+const boss = (params.get("boss") || "weak").toLowerCase(); // weak/mid/strong
+
+// ★ 本多追加：難易度ごとに設定値を切り替え
+let GAME_DURATION, TARGET_SCORE, SPAWN_INTERVAL;
+if (boss === "weak") {
+  GAME_DURATION = 40;   // 制限時間 40秒
+  TARGET_SCORE  = 30;   // 30点でクリア
+  SPAWN_INTERVAL = 1100; // 出現間隔ゆるめ
+} else if (boss === "mid") {
+  GAME_DURATION = 50;
+  TARGET_SCORE  = 50;
+  SPAWN_INTERVAL = 900;
+} else if (boss === "strong") {
+  GAME_DURATION = 60;
+  TARGET_SCORE  = 80;
+  SPAWN_INTERVAL = 700; // 速く出る
+}
+
+// 穴の数とキャラクター
 const HOLE_COUNT = 9;
-const GAME_DURATION = 60; // 60秒
-const TARGET_SCORE = 50; // 目標スコア
-const SPAWN_INTERVAL = 900; // 貧乏神の出現間隔（ミリ秒）
 const CHARACTER_TYPES = [
   { className: 'good-mole', score: 10, message: '+10点！' },
   { className: 'bad-mole', score: -15, message: '-15点…' },
@@ -21,9 +39,7 @@ let timerId = null;
 let spawnId = null;
 let isGameActive = false;
 
-// ★ もとのAmazon商品URLを取得（index.html?product=... で渡される）
-const params = new URLSearchParams(window.location.search);
-const productUrl = params.get('product');
+
 
 // ★ 商品キーを作成（/dp/ASIN を優先、無ければURL全体）
 const getProductKey = (url) => {

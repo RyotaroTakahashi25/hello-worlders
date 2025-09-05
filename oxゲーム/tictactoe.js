@@ -8,9 +8,10 @@ let gameActive = true;
 let currentPlayer = 'o';
 let board = ['', '', '', '', '', '', '', '', ''];
 
-// ★ もとのAmazon商品URLを取得（index.html?product=... で渡される想定）
+// ★ クエリ取得
 const params = new URLSearchParams(window.location.search);
 const productUrl = params.get('product');
+const boss = (params.get("boss") || "mid").toLowerCase(); // weak/mid/strong
 
 // ★ 商品キーを作成（/dp/ASIN を優先、無ければURL全体）
 const getProductKey = (url) => {
@@ -26,17 +27,14 @@ const saveClearedAndReturn = () => {
   }
   const key = getProductKey(productUrl);
 
-  // chrome.storage.local に「商品ごとのクリア印」を保存（要 manifest: "permissions": ["storage"]）
   if (chrome?.storage?.local) {
     chrome.storage.local.get({ cleared: {} }, ({ cleared }) => {
       cleared[key] = Date.now();
       chrome.storage.local.set({ cleared }, () => {
-        // 元のAmazon商品ページへ戻る
         window.location.href = productUrl;
       });
     });
   } else {
-    // フォールバック（そのまま戻るだけ）
     window.location.href = productUrl;
   }
 };
@@ -78,12 +76,10 @@ const checkResult = () => {
     }
 
     if (roundWon) {
-        // 貧乏神が勝った場合のメッセージ
         if (currentPlayer === 'x') {
             handleStatusDisplay(`貧乏神の勝ち！🎉`);
         } else {
             handleStatusDisplay(`あなたの勝ち！🎉`);
-            // ★ 「あなたの勝ち！」ならクリア扱い → 少し演出を見せてから戻る
             setTimeout(saveClearedAndReturn, 1200);
         }
         gameActive = false;
@@ -96,10 +92,7 @@ const checkResult = () => {
         handleStatusDisplay('引き分けです。');
         gameActive = false;
         restartButton.classList.remove('hidden');
-
-        // ★（任意）引き分けでもクリア扱いにしたい場合は下の行を有効化
-        // setTimeout(saveClearedAndReturn, 1200);
-
+        // setTimeout(saveClearedAndReturn, 1200); // 引き分けでもクリア扱いにしたい場合
         return true;
     }
 
@@ -115,20 +108,35 @@ const handlePlayerTurn = (clickedCell, clickedCellIndex) => {
     if (checkResult()) return;
 
     currentPlayer = 'x';
-    // ここを変更
     handleStatusDisplay('貧乏神の番です (✕)');
-    setTimeout(handleAITurn, 1000); // 1秒後にAIを動作させる
+    setTimeout(handleAITurn, 800); // AIは0.8秒後に動く
 };
 
-// AIのターン（ミニマックス法）
+// ★ AIのターン（難易度調整付き）
 const handleAITurn = () => {
     if (!gameActive) return;
 
-    const bestMove = getBestMove();
-    
-    board[bestMove] = 'x';
-    cells[bestMove].textContent = 'X';
-    cells[bestMove].classList.add('player-x');
+    let move;
+    if (boss === "weak") {
+        // 弱いAI: ランダム
+        const emptyCells = board.map((v, i) => v === '' ? i : null).filter(v => v !== null);
+        move = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+    } else if (boss === "mid") {
+        // 中くらいAI: 50%ランダム / 50%最適
+        if (Math.random() < 0.5) {
+            const emptyCells = board.map((v, i) => v === '' ? i : null).filter(v => v !== null);
+            move = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+        } else {
+            move = getBestMove();
+        }
+    } else {
+        // 強いAI: 常に最適
+        move = getBestMove();
+    }
+
+    board[move] = 'x';
+    cells[move].textContent = 'X';
+    cells[move].classList.add('player-x');
 
     if (checkResult()) return;
 
@@ -136,7 +144,7 @@ const handleAITurn = () => {
     handleStatusDisplay('あなたの番です (〇)');
 };
 
-// ミニマックス法を実装
+// 最適手の計算
 const getBestMove = () => {
     let bestScore = -Infinity;
     let move = null;
@@ -145,7 +153,7 @@ const getBestMove = () => {
         if (board[i] === '') {
             board[i] = 'x';
             let score = minimax(board, 0, false);
-            board[i] = ''; // 元に戻す
+            board[i] = '';
             if (score > bestScore) {
                 bestScore = score;
                 move = i;
@@ -160,7 +168,7 @@ const minimax = (board, depth, isMaximizingPlayer) => {
     if (winner !== null) {
         if (winner === 'x') return 10 - depth;
         if (winner === 'o') return depth - 10;
-        return 0; // 引き分け
+        return 0;
     }
 
     if (isMaximizingPlayer) {
@@ -215,7 +223,6 @@ restartButton.addEventListener('click', () => {
     gameActive = true;
     currentPlayer = 'o';
     board = ['', '', '', '', '', '', '', '', ''];
-    // ここを変更
     handleStatusDisplay('あなたの番です (〇)');
     restartButton.classList.add('hidden');
     cells.forEach(cell => {
