@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>計算クイズ</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* このページだけで使う簡単なスタイルを統一 */
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #2F1B41;
+      color: #fff;
+    }
+    .game-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 80vh;
+    }
+    #question { 
+      font-size: 2em; 
+      margin: 20px;
+      color: #fff;
+    }
+    #answer { 
+      font-size: 1.5em; 
+      padding: 10px; 
+      width: 100px; 
+      text-align: center;
+      background-color: #554466;
+      color: #fff;
+      border: 1px solid #554466;
+      border-radius: 5px;
+    }
+    #submitAnswer { 
+      font-size: 1.2em; 
+      padding: 10px 20px; 
+      margin-left: 10px;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    #result { 
+      margin-top: 20px; 
+      font-weight: bold;
+      color: #fff;
+    }
+    #missionClearBtn {
+      padding: 10px 20px;
+      font-size: 1em;
+      cursor: pointer;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <div id="question">12 + 5 = ?</div>
+    <input type="number" id="answer" placeholder="答え">
+    <button id="submitAnswer">回答する</button>
+
+    <p id="result"></p>
+
+    <button id="missionClearBtn" style="display:none;">ミッションクリア！</button>
+  </div>
+
+  <script src="quiz_logic.js"></script>
+</body>
+</html>

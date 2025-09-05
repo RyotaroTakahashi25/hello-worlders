@@ -1,0 +1,85 @@
+/* === 和風フォントテーマ === */
+body {
+  font-family: "Sawarabi Mincho", "Noto Serif JP", "Hiragino Mincho ProN",
+               "Yu Mincho", "MS PMincho", serif; /* 和風フォント */
+  text-align: center;
+  padding: 40px;
+  background-color: #f0f2f5;
+}
+
+/* タイトルを筆文字寄りに */
+h1 {
+  font-family: "Kokoro", "Sawarabi Mincho", "Noto Serif JP", serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #333;
+}
+
+.roulette-container {
+  position: relative;
+  width: 350px;
+  height: 350px;
+  margin: 30px auto;
+}
+
+canvas {
+  display: block;
+}
+
+.arrow {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-top: 40px solid #e74c3c; /* 矢印の色 */
+}
+
+button {
+  margin-top: 20px;
+  padding: 15px 30px;
+  font-size: 18px;
+  cursor: pointer;
+  border: none;
+  background-color: #3498db;
+  color: white;
+  border-radius: 8px;
+  transition: background-color 0.3s;
+  font-family: "Sawarabi Mincho", "Noto Serif JP", serif; /* 和風ボタン */
+}
+
+button:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.binbougami-meter {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 10000;
+  font-family: "Sawarabi Mincho", "Noto Serif JP", serif; /* 和風フォント */
+  color: #333;
+  font-size: 1.1em;
+}
+
+.binbougami-icon {
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+}
+
+.savings-counter {
+  font-weight: bold;
+  font-family: "Sawarabi Mincho", "Noto Serif JP", serif; /* 和風数字 */
+}

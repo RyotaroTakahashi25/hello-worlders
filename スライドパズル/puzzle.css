@@ -1,0 +1,60 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #2F1B41; /* 暗い紫 */
+    color: #fff; /* 白 */
+}
+
+h1 {
+    color: #fff;
+}
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.puzzle-board {
+    width: 300px;
+    height: 300px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 5px;
+    background-color: #554466;
+    border-radius: 10px;
+}
+
+.puzzle-piece {
+    width: 100%;
+    height: 100%;
+    background-image: url('background-image.jpeg');
+    background-size: 300px 300px;
+    cursor: pointer;
+    transition: transform 0.3s ease-in-out;
+}
+
+.puzzle-piece.empty {
+    background-image: none;
+    background-color: #554466;
+    cursor: default;
+}
+
+.message {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 20px 0;
+}
+
+.restart-button {
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
