@@ -3,21 +3,66 @@ window.addEventListener("DOMContentLoaded", () => {
   const ctx = canvas.getContext("2d");
   const spinBtn = document.getElementById("spinBtn");
 
-  // クエリ読み取り（bossで色を変える）★本多追加
-  const params = new URLSearchParams(window.location.search);
-  const boss = (params.get("boss") || "weak").toLowerCase();
-  const productUrl = params.get("product") || params.get("from");
+  // クエリ読み取り（bossで色とキャラを変える）★本多追加
+const params = new URLSearchParams(window.location.search);
+const boss = (params.get("boss") || "weak").toLowerCase();
+const productUrl = params.get("product") || params.get("from");
 
-  if (boss === "strong") {
-    document.body.style.backgroundColor = "#7b3a75"; // 強ボス: 紫
-    document.body.style.color = "#f6b16b";
-  } else if (boss === "mid") {
-    document.body.style.backgroundColor = "#b55e16"; // 中ボス: オレンジ
-    document.body.style.color = "#f6d64a";
-  } else {
-    document.body.style.backgroundColor = "#6baed6"; // 弱ボス：みずいろ　函館弁ってみず（↑）いろなんですよね。
-    document.body.style.color = "#e74c3c";
+// キャラクター定義
+const characters = {
+  strong: {
+    name: "ビンボゴン",
+    face: chrome.runtime.getURL("images/face_strong.jpg"),
+    lines: [
+      "我が現れし時、汝の運命は決した！",
+      "ククク…愚かなる挑戦者よ、覚悟はあるか？",
+      "よかろう、我を倒してみよ！"
+    ],
+    bg: "#7b3a75",
+    color: "#f6b16b"
+  },
+  mid: {
+    name: "サイフリン",
+    face: chrome.runtime.getURL("images/face_mid1.png"),
+    lines: [
+      "へっへっへ！今日はツイてないね！",
+      "おっと〜？お前さんの運、試させてもらうぜ！",
+      "ワシに勝てば少しは楽になるかもな〜"
+    ],
+    bg: "#b55e16",
+    color: "#f6d64a"
+  },
+  weak: {
+    name: "コゼニー",
+    face: chrome.runtime.getURL("images/face_weak3.png"),
+    lines: [
+      "えへへ、ボク弱いけどよろしく！",
+      "うひゃ〜！ミッションって何するの？",
+      "あわわ…がんばらなきゃ…"
+    ],
+    bg: "#6baed6", // 函館弁で「みず↑いろ」
+    color: "#e74c3c"
   }
+};
+
+// 選ばれたキャラを取得（デフォルトはweak）
+const current = characters[boss] || characters.weak;
+
+// 背景と文字色を反映
+document.body.style.backgroundColor = current.bg;
+document.body.style.color = current.color;
+
+// キャラ表示を #character-container に描画
+const container = document.getElementById("character-container");
+if (container) {
+  container.innerHTML = `
+    <h2>${current.name}</h2>
+    <img src="${current.face}" alt="${current.name}" style="max-width:200px;">
+    <p>${current.lines[Math.floor(Math.random() * current.lines.length)]}</p>
+  `;
+} else {
+  console.warn("#character-container が見つかりません。HTMLに <div id=\"character-container\"></div> を用意してください。");
+}
 
   // ルーレットの項目（ミニゲーム名）
   const games = [
@@ -28,7 +73,34 @@ window.addEventListener("DOMContentLoaded", () => {
     "スライドパズル"
   ];
   
-  const colors = [ "#06d6a0", "#118ab2", "#ef476f", "#ffd166","#8338ec"];
+ //本多追加・ルーレット配色変化
+  function pickColors() {
+    const direct = params.get("colors");
+    if (direct) {
+      const list = direct.split(",").map(s => s.trim()).filter(Boolean);
+      return expandToGameCount(list);
+    }
+
+    const palettes = {
+      strong: ["#3b0a45", "#5d174d", "#7d2455", "#a13260", "#c63f6b"],
+      mid:    ["#684015", "#8a5a14", "#ad7916", "#c9971e", "#e0b24a"],
+      weak:   ["#0b2545", "#123e6b", "#1a659e", "#2a7fba", "#2e86c1"],
+      dark:   ["#1f2937", "#374151", "#4b5563", "#6b7280", "#111827"]
+    };
+
+    const p = (params.get("palette") || boss || "dark").toLowerCase();
+    const base = palettes[p] || palettes.dark;
+    return expandToGameCount(base);
+  }
+
+  function expandToGameCount(arr) {
+    if (arr.length === games.length) return arr;
+    const out = [];
+    for (let i = 0; i < games.length; i++) out.push(arr[i % arr.length]);
+    return out;
+  }
+
+  const colors = pickColors();
 
     // ゲーム名とHTMLファイル名を対応付けるオブジェクトを作成
   const gameFiles = {
