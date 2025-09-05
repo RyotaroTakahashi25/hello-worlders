@@ -3,9 +3,21 @@ window.addEventListener("DOMContentLoaded", () => {
   const ctx = canvas.getContext("2d");
   const spinBtn = document.getElementById("spinBtn");
 
-    // ページのURLから元のAmazon商品URLを取得
+  // クエリ読み取り（bossで色を変える）★本多追加
   const params = new URLSearchParams(window.location.search);
-  const productUrl = params.get("product");
+  const boss = (params.get("boss") || "weak").toLowerCase();
+  const productUrl = params.get("product") || params.get("from");
+
+  if (boss === "strong") {
+    document.body.style.backgroundColor = "#7b3a75"; // 強ボス: 紫
+    document.body.style.color = "#f6b16b";
+  } else if (boss === "mid") {
+    document.body.style.backgroundColor = "#b55e16"; // 中ボス: オレンジ
+    document.body.style.color = "#f6d64a";
+  } else {
+    document.body.style.backgroundColor = "#6baed6"; // 弱ボス：みずいろ　函館弁ってみず（↑）いろなんですよね。
+    document.body.style.color = "#e74c3c";
+  }
 
   // ルーレットの項目（ミニゲーム名）
   const games = [
