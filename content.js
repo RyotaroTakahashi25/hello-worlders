@@ -323,6 +323,8 @@ function showReflectionPopup(overlay) {
   title.innerHTML = "買い物カゴは、お前の欲望の墓場じゃ！<br>罰として、200文字で今日買ったものの必要性を説明して反省文を提出するんじゃな！";
   dialog.appendChild(title);
 
+  // ★【テスト用変更】テキストエリアと文字数カウンター、入力チェックを削除
+  /*
   const textarea = document.createElement("textarea");
   textarea.placeholder = "（この商品の必要性を200文字以上で記入…）";
   dialog.appendChild(textarea);
@@ -330,11 +332,14 @@ function showReflectionPopup(overlay) {
   const counter = document.createElement("p");
   counter.textContent = "0 / 200 文字";
   dialog.appendChild(counter);
+  */
   
   const submitBtn = document.createElement("button");
   submitBtn.textContent = "反省を完了する";
-  submitBtn.disabled = true;
+  // ★【テスト用変更】ボタンを最初から有効にする
+  // submitBtn.disabled = true;
 
+  /* ★【テスト用変更】文字数チェックのイベントリスナーを削除
   textarea.addEventListener("input", () => {
     const len = textarea.value.length;
     counter.textContent = `${len} / 200 文字`;
@@ -346,36 +351,23 @@ function showReflectionPopup(overlay) {
       counter.style.color = "";
     }
   });
+  */
 
+  // ★【テスト用変更】クリック時の処理を、AI判定をスキップして成功時の処理に書き換え
   submitBtn.onclick = () => {
-  const text = textarea.value;
-  console.log("反省文送信:", text);
-
-  chrome.runtime.sendMessage({ action: "judgeReflection", text }, (response) => {
-    if (!response) {
-      console.error("background からの応答がありません！");
-      return;
-    }
-    const result = response.result;
-    console.log("AI判定結果:", result);
-
-    if (result === "OK") {
-      chrome.storage.local.set({ wastefulnessLevel: 0 }, () => {
-        alert("反省、しかと受け取った！これに懲りたら無駄遣いはやめるのじゃぞ！");
-        overlay.remove();
-      });
-    } else {
-      alert("そんな反省文で許されると思ったか！");
-    }
-  });
-};
-
-
+    console.log("【テスト】反省文の提出をスキップしました。");
+    // 本来はAI判定成功後に実行される処理を直接呼び出す
+    chrome.storage.local.set({ wastefulnessLevel: 0 }, () => {
+      alert("反省、しかと受け取った！これに懲りたら無駄遣いはやめるのじゃぞ！");
+      overlay.remove();
+    });
+  };
 
   dialog.appendChild(submitBtn);
   overlay.appendChild(dialog);
   gsap.fromTo(dialog, { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.7)" });
 }
+
 
 // ----- 吹き出し -----
 function showCharacterDialog(overlay, character, imgElement, roll, wastefulnessLevel) {
