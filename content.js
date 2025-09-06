@@ -310,6 +310,83 @@ gsap.to(img, {
 });
 }
 
+// ----- 結果表示オーバーレイ -----
+function showResultOverlay(isOK, overlay) {
+  const resultOverlay = document.createElement("div");
+  resultOverlay.style.position = "fixed";
+  resultOverlay.style.top = 0;
+  resultOverlay.style.left = 0;
+  resultOverlay.style.width = "100%";
+  resultOverlay.style.height = "100%";
+  resultOverlay.style.backgroundColor = "rgba(0,0,0,0.6)";
+  resultOverlay.style.display = "flex";
+  resultOverlay.style.alignItems = "center";
+  resultOverlay.style.justifyContent = "center";
+  resultOverlay.style.zIndex = 10001;
+
+  const container = document.createElement("div");
+  container.style.display = "flex";
+  container.style.alignItems = "center";
+  container.style.gap = "20px";
+
+  // 左：ビンボゴン画像
+  const img = document.createElement("img");
+  img.src = chrome.runtime.getURL("images/face_strong.jpg");
+  img.style.width = "320px"; // 大きめに変更
+  img.style.height = "auto";
+  container.appendChild(img);
+
+   // 右：吹き出し
+  const speech = document.createElement("div");
+  speech.style.background = "white";
+  speech.style.padding = "30px";
+  speech.style.borderRadius = "16px";
+  speech.style.maxWidth = "600px"; // 大きく
+  speech.style.fontSize = "20px"; // 文字サイズUP
+  speech.style.lineHeight = "1.6";
+  speech.style.boxShadow = "0 4px 20px rgba(0,0,0,0.3)";
+
+  if (isOK) {
+    speech.textContent = "反省、しかと受け取った！これに懲りたら無駄遣いはやめるのじゃぞ！";
+  } else {
+    speech.textContent = "そんな反省文で許されると思ったか！もう一度反省せい！";
+    const retryBtn = document.createElement("button");
+    retryBtn.textContent = "もう一度反省する";
+    retryBtn.style.fontSize = "15px";
+    retryBtn.style.display = "block";
+    retryBtn.style.marginTop = "10px";
+    retryBtn.onclick = () => {
+      resultOverlay.remove();
+      showReflectionPopup(overlay); // 再度反省文入力
+    };
+    speech.appendChild(retryBtn);
+  }
+
+  container.appendChild(speech);
+  resultOverlay.appendChild(container);
+  document.body.appendChild(resultOverlay);
+
+  // アニメーション（ぬるっと登場）
+  gsap.fromTo(
+    container,
+    { opacity: 0, scale: 0.6 },
+    { opacity: 1, scale: 1, duration: 0.8, ease: "back.out(1.7)" }
+  );
+
+  if (isOK) {
+    setTimeout(() => {
+      gsap.to(resultOverlay, {
+        opacity: 0,
+        duration: 0.5,
+        onComplete: () => {
+          resultOverlay.remove();
+          overlay.remove(); // 最初の反省文オーバーレイごと消す
+        }
+      });
+    }, 3000); // 3秒後に消える
+  }
+}
+
 // ----- 反省文ポップアップ表示 -----
 function showReflectionPopup(overlay) {
   const dialog = document.createElement("div");
@@ -318,7 +395,8 @@ function showReflectionPopup(overlay) {
   dialog.style.left = "50%";
   dialog.style.top = "50%";
   dialog.style.transform = "translate(-50%, -50%)";
-  
+  dialog.style.zIndex = 10000;
+
   const title = document.createElement("h2");
   title.innerHTML = "買い物カゴは、お前の欲望の墓場じゃ！<br>罰として、200文字で今日買ったものの必要性を説明して反省文を提出するんじゃな！";
   dialog.appendChild(title);
@@ -348,29 +426,23 @@ function showReflectionPopup(overlay) {
   });
 
   submitBtn.onclick = () => {
-  const text = textarea.value;
-  console.log("反省文送信:", text);
-
-  chrome.runtime.sendMessage({ action: "judgeReflection", text }, (response) => {
-    if (!response) {
-      console.error("background からの応答がありません！");
-      return;
-    }
-    const result = response.result;
-    console.log("AI判定結果:", result);
-
-    if (result === "OK") {
-      chrome.storage.local.set({ wastefulnessLevel: 0 }, () => {
-        alert("反省、しかと受け取った！これに懲りたら無駄遣いはやめるのじゃぞ！");
-        overlay.remove();
-      });
-    } else {
-      alert("そんな反省文で許されると思ったか！");
-    }
-  });
-};
-
-
+    const text = textarea.value;
+    chrome.runtime.sendMessage({ action: "judgeReflection", text }, (response) => {
+      if (!response) {
+        console.error("background からの応答がありません！");
+        return;
+      }
+      const result = response.result;
+      dialog.remove(); // 入力ダイアログを消す
+      if (result === "OK") {
+        chrome.storage.local.set({ wastefulnessLevel: 0 }, () => {
+          showResultOverlay(true, overlay);
+        });
+      } else {
+        showResultOverlay(false, overlay);
+      }
+    });
+  };
 
   dialog.appendChild(submitBtn);
   overlay.appendChild(dialog);
