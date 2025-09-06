@@ -1,4 +1,4 @@
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const YOUR_OPENAI_API_KEY = "ここにあなたのOpenAI APIキーを入力してください";
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.action === "judgeReflection") {
