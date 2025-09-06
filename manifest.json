@@ -20,7 +20,8 @@
         "images/face_weak2.png",
         "images/face_weak3.png",
         "index.html",
-        "quiz_game.html"
+        "quiz_game.html",
+        "style.css"
       ],
       "matches": ["<all_urls>"]
     }

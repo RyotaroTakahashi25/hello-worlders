@@ -1,5 +1,5 @@
-
 //★追加、GSAPの読み込み用
+// メーター機能の最終版サトーゴ
 (function ensureGSAP() {
   if (typeof gsap === "undefined") {
     console.warn("[dice-mission] GSAPが未ロードです。manifestのjs順序を確認してください。");
@@ -18,18 +18,11 @@ const getProductKey = (url) => {
   }
 };
 
-// ★追加: クリア済みチェック（chrome.storage.local）。使えない場合は旧sessionStorageへフォールバック
+// ★ 変更点: この関数を修正し、常にfalseを返すようにします
+// これにより、「クリア済み」のチェックが実質的に無効化され、毎回サイコロが出現します。
 function isProductCleared(url) {
-  const key = getProductKey(url);
   return new Promise((resolve) => {
-    try {
-      if (!chrome?.storage?.local) throw new Error("no chrome.storage");
-      chrome.storage.local.get({ cleared: {} }, ({ cleared }) => {
-        resolve(!!cleared[key]);
-      });
-    } catch (e) {
-      resolve(sessionStorage.getItem("clearedUrl") === url);
-    }
+    resolve(false); // 常に「クリアしていない」という結果を返す
   });
 }
 
@@ -45,7 +38,7 @@ style.textContent = `
   border-radius: .4em;
   padding: 1.5em;
   max-width: 500px;
-  font-size: 15px;
+  font-size: 18px; /* 文字サイズを15pxから18pxに変更 */
   text-align: center;
   z-index: 10001;
 }
@@ -58,6 +51,10 @@ style.textContent = `
 }
 #dice-overlay button:hover {
   background-color: #eee;
+}
+#dice-overlay button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 .dice {
   width: 120px;
@@ -91,6 +88,66 @@ style.textContent = `
   height: 100%;
   object-fit: contain;
   background: white; /* 貧乏神の余白だけ白く */
+}
+/* ★追加: 反省文用のスタイル */
+.king-bomb-dialog {
+  background: #000;
+  color: #fff;
+  border: 2px solid #ff4500;
+  padding: 2em;
+}
+.king-bomb-dialog h2 {
+  color: #ff4500;
+  font-weight: bold;
+  font-size: 1.2em; /* 文字サイズ調整 */
+  line-height: 1.5; /* 行間調整 */
+}
+.king-bomb-dialog textarea {
+  width: 90%;
+  height: 150px;
+  margin-top: 15px;
+  padding: 10px;
+  font-size: 14px;
+}
+.king-bomb-dialog p {
+  font-size: 12px;
+  margin-top: 5px;
+  text-align: right;
+  padding-right: 5%;
+}
+
+#wastefulness-meter-container {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.wastefulness-meter-title {
+  font-weight: bold;
+  font-size: 0.8em; /* メータータイトルは少し小さめに調整 */
+  color: #333;
+}
+.wastefulness-meter-bar {
+  display: flex;
+  width: 200px;
+  height: 25px;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+}
+.wastefulness-meter-segment {
+  width: 25%;
+  height: 100%;
+  background-color: #e9e9e9;
+  transition: background-color 0.5s ease;
+}
+.wastefulness-meter-segment:not(:last-child) {
+    border-right: 1px solid #ccc;
 }
 `;
 document.head.appendChild(style);
@@ -154,7 +211,7 @@ function createDice(overlay) {
 }
 
 // ----- サイコロ振るアニメーション -----
-function rollDiceAnimation(dice, overlay) {
+function rollDiceAnimation(dice, overlay, wastefulnessLevel) {
   const roll = Math.floor(Math.random() * 6);
   const finalRot = [
     {x: 0,   y: 0},
@@ -175,14 +232,14 @@ function rollDiceAnimation(dice, overlay) {
     duration: 3,
     ease: "back.out(2)",
     onComplete: () => {
-      showCharacterFace(overlay, roll);
+      showCharacterFace(overlay, roll, wastefulnessLevel);
       gsap.to(dice, { opacity: 0, scale: 0, duration: 0.5, delay: 0.5, onComplete: () => dice.remove() });
     }
   });
 }
 
 // ----- キャラ登場 -----
-function showCharacterFace(overlay, roll) {
+function showCharacterFace(overlay, roll, wastefulnessLevel) {
   const character = characters[roll];
 
   const img = document.createElement("img");
@@ -193,10 +250,10 @@ function showCharacterFace(overlay, roll) {
   img.style.transform = "translate(-50%, -50%)";
   img.style.zIndex = 10000;
   img.style.opacity = 0;
-  img.style.maxWidth = "40vw";   // 画面幅の40%
-  img.style.maxHeight = "60vh";  // 画面高さの60%
-  img.style.width = "auto";      // アスペクト比維持
-  img.style.height = "auto";     // アスペクト比維持
+  img.style.maxWidth = "40vw";
+  img.style.maxHeight = "60vh";
+  img.style.width = "auto";
+  img.style.height = "auto";
 
 
   overlay.appendChild(img);
@@ -213,7 +270,7 @@ gsap.to(img, {
   duration: 0.5,
   delay: 2,
   onComplete: () => {
-    img.remove(); // 古い画像は消す
+    img.remove();
 
     // --- STEP3: 吹き出し付きで再登場 ---
     const img2 = document.createElement("img");
@@ -237,70 +294,221 @@ gsap.to(img, {
     );
 
     // 吹き出しを出す
-    showCharacterDialog(overlay, character, img2, roll);
+    showCharacterDialog(overlay, character, img2, roll, wastefulnessLevel);
   }
 });
 }
 
+// ----- 反省文ポップアップ表示 -----
+function showReflectionPopup(overlay) {
+  const dialog = document.createElement("div");
+  dialog.className = "speech-bubble king-bomb-dialog";
+  dialog.style.position = "fixed";
+  dialog.style.left = "50%";
+  dialog.style.top = "50%";
+  dialog.style.transform = "translate(-50%, -50%)";
+  
+  const title = document.createElement("h2");
+  title.innerHTML = "買い物カゴは、お前の欲望の墓場じゃ！<br>罰として、200文字で今日買ったものの必要性を説明して反省文を提出するんじゃな！";
+  dialog.appendChild(title);
+
+  const textarea = document.createElement("textarea");
+  textarea.placeholder = "（この商品の必要性を200文字以上で記入…）";
+  dialog.appendChild(textarea);
+
+  const counter = document.createElement("p");
+  counter.textContent = "0 / 200 文字";
+  dialog.appendChild(counter);
+  
+  const submitBtn = document.createElement("button");
+  submitBtn.textContent = "反省を完了する";
+  submitBtn.disabled = true;
+
+  textarea.addEventListener("input", () => {
+    const len = textarea.value.length;
+    counter.textContent = `${len} / 200 文字`;
+    if (len >= 200) {
+      submitBtn.disabled = false;
+      counter.style.color = "#90ee90";
+    } else {
+      submitBtn.disabled = true;
+      counter.style.color = "";
+    }
+  });
+
+  submitBtn.onclick = () => {
+    chrome.storage.local.set({ wastefulnessLevel: 0 }, () => {
+      alert("反省、しかと受け取った！これに懲りたら無駄遣いはやめるのじゃぞ！");
+      overlay.remove();
+    });
+  };
+
+  dialog.appendChild(submitBtn);
+  overlay.appendChild(dialog);
+  gsap.fromTo(dialog, { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.7)" });
+}
+
 // ----- 吹き出し -----
-function showCharacterDialog(overlay, character, imgElement, roll) {
+function showCharacterDialog(overlay, character, imgElement, roll, wastefulnessLevel) {
   const dialog = document.createElement("div");
   dialog.className = "speech-bubble";
   const line = character.lines[Math.floor(Math.random() * character.lines.length)];
   dialog.textContent = `${character.name}: ${line}`;
 
-  const rect = imgElement.getBoundingClientRect();
   dialog.style.position = "fixed";
-  dialog.style.left = "55%";       // キャラより右
-  dialog.style.top = "50%";        // 縦中央
+  dialog.style.left = "55%";
+  dialog.style.top = "50%";
   dialog.style.transform = "translateY(-50%)";
-         // 中央揃え
 
-   // === ボタンラッパーを追加 ===
   const btnWrap = document.createElement("div");
-  btnWrap.style.marginTop = "20px";   // 👈 テキストとボタンの間を広げる
-  btnWrap.style.textAlign = "center"; // 👈 中央寄せしたい場合
+  btnWrap.style.marginTop = "20px";
+  btnWrap.style.textAlign = "center";
 
-  // はいボタン ★本多変更
+  // はいボタン
   const yesBtn = document.createElement("button");
   yesBtn.textContent = "はい";
   yesBtn.onclick = () => {
-  const from = encodeURIComponent(window.location.href); // ← これを追加
+    const nextLevel = wastefulnessLevel + 1;
+    
+    // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+    // ★ 修正点: 4回目のクリックでメーターを赤くしてからキングボンビーを登場させる ★
+    // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+    if (nextLevel >= 4) {
+      // 連打防止のためボタンを無効化
+      yesBtn.disabled = true;
+      noBtn.disabled = true;
 
-  let targetUrl;
-  if (roll === 0) {
-    targetUrl = chrome.runtime.getURL(`index.html?boss=strong&from=${from}`);
-  } else if (roll === 1 || roll === 2) {
-    targetUrl = chrome.runtime.getURL(`index.html?boss=mid&from=${from}`);
-  } else {
-    targetUrl = chrome.runtime.getURL(`index.html?boss=weak&from=${from}`);
-  }
-  window.location.href = targetUrl;
-};
+      // メーターの最後のセグメントを取得
+      const meterSegments = dialog.querySelectorAll('.wastefulness-meter-segment');
+      if (meterSegments.length === 4) {
+        const lastSegment = meterSegments[3];
+        // メーターを赤くするアニメーション
+        gsap.to(lastSegment, {
+          backgroundColor: '#ff6347', // 赤色
+          duration: 0.5,
+          delay: 0.1,
+          onComplete: () => {
+            // メーターが赤くなった後、少し待ってから次の演出へ
+            setTimeout(() => {
+              // 現在のダイアログとキャラ画像を消す
+              gsap.to([dialog, imgElement], {
+                opacity: 0,
+                duration: 0.5,
+                onComplete: () => {
+                  dialog.remove();
+                  imgElement.remove();
+                  
+                  // キングボンビー画像(face_strong.jpg)を表示
+                  const kingBombieImg = document.createElement("img");
+                  kingBombieImg.src = chrome.runtime.getURL("images/face_strong.jpg");
+                  kingBombieImg.style.position = "fixed";
+                  kingBombieImg.style.top = "50%";
+                  kingBombieImg.style.left = "50%";
+                  kingBombieImg.style.transform = "translate(-50%, -50%)";
+                  kingBombieImg.style.zIndex = 10000;
+                  kingBombieImg.style.maxWidth = "60vw";
+                  kingBombieImg.style.maxHeight = "80vh";
+                  kingBombieImg.style.width = "auto";
+                  kingBombieImg.style.height = "auto";
+                  overlay.appendChild(kingBombieImg);
+
+                  // キングボンビーをアニメーションで表示
+                  gsap.fromTo(kingBombieImg, { scale: 0, opacity: 0 }, {
+                    scale: 1,
+                    opacity: 1,
+                    duration: 1.0,
+                    ease: "elastic.out(1, 0.5)",
+                    onComplete: () => {
+                      // キングボンビー画像が表示されきったら、画像を削除し反省文を表示
+                      setTimeout(() => {
+                        gsap.to(kingBombieImg, { opacity: 0, duration: 0.5, onComplete: () => {
+                          kingBombieImg.remove();
+                          showReflectionPopup(overlay); // 反省文ポップアップを表示
+                        }});
+                      }, 1500); // キングボンビー画像をしばらく表示する時間
+                    }
+                  });
+                }
+              });
+            }, 800); // 赤いメーターを見せるための待ち時間
+          }
+        });
+      }
+      return; // ページ遷移を止める
+    }
+    
+    // 4回未満の場合はレベルを上げて次のミッションへ
+    chrome.storage.local.set({ wastefulnessLevel: nextLevel }, () => {
+      const from = encodeURIComponent(window.location.href);
+      let targetUrl;
+      if (roll === 0) {
+        targetUrl = chrome.runtime.getURL(`index.html?boss=strong&from=${from}`);
+      } else if (roll === 1 || roll === 2) {
+        targetUrl = chrome.runtime.getURL(`index.html?boss=mid&from=${from}`);
+      } else {
+        targetUrl = chrome.runtime.getURL(`index.html?boss=weak&from=${from}`);
+      }
+      window.location.href = targetUrl;
+    });
+  };
 
   // いいえボタン
   const noBtn = document.createElement("button");
   noBtn.textContent = "いいえ";
   noBtn.onclick = () => { overlay.remove(); };
 
-  // === ラッパーにまとめる ===
-btnWrap.appendChild(yesBtn);
-btnWrap.appendChild(noBtn);
+  btnWrap.appendChild(yesBtn);
+  btnWrap.appendChild(noBtn);
+  
+  dialog.appendChild(btnWrap);
 
-// === ダイアログに追加（<br>は使わない） ===
-dialog.appendChild(btnWrap);
+  // 2回目以降(wastefulnessLevel > 0)の場合にメーターを表示
+  if (wastefulnessLevel > 0) {
+    const meterContainer = document.createElement("div");
+    meterContainer.id = "wastefulness-meter-container";
+
+    const title = document.createElement("div");
+    title.className = "wastefulness-meter-title";
+    title.textContent = "浪費額メーター";
+    meterContainer.appendChild(title);
+
+    const meterBar = document.createElement("div");
+    meterBar.className = "wastefulness-meter-bar";
+    
+    const segments = [];
+    for (let i = 0; i < 4; i++) {
+        const segment = document.createElement("div");
+        segment.className = "wastefulness-meter-segment";
+        meterBar.appendChild(segment);
+        segments.push(segment);
+    }
+    meterContainer.appendChild(meterBar);
+
+    // 現在の浪費レベルに応じてメーターの色を更新
+    // レベル1: 黄緑, レベル2: 黄色, レベル3: オレンジ
+    const colors = ['#bfffbf', '#ffd700', '#ffa500'];
+    for (let i = 0; i < wastefulnessLevel; i++) {
+        if (segments[i]) {
+            segments[i].style.backgroundColor = colors[i];
+        }
+    }
+    
+    dialog.appendChild(meterContainer);
+  }
 
   overlay.appendChild(dialog);
   gsap.fromTo(dialog, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.6, ease: "back.out(1.7)" });
 }
 
-
 // ----- 流れ開始 -----
 function initDiceFlow() {
-  const overlay = createOverlay();
-  overlay.style.background = "rgba(57, 20, 57, 0.95)"; // 紫の背景に変更
-  const dice = createDice(overlay);
-  rollDiceAnimation(dice, overlay);
+  // ストレージから現在の浪費レベルを取得 (なければ0)
+  chrome.storage.local.get({ wastefulnessLevel: 0 }, ({ wastefulnessLevel }) => {
+    const overlay = createOverlay();
+    overlay.style.background = "rgba(57, 20, 57, 0.95)";
+    const dice = createDice(overlay);
+    rollDiceAnimation(dice, overlay, wastefulnessLevel);
+  });
 }
 
 // ----- ボタン監視 -----
@@ -309,27 +517,22 @@ function attachListeners() {
     const cartBtn = document.getElementById("add-to-cart-button");
     const buyBtn = document.getElementById("buy-now-button");
 
-    // ★変更: ここから（クリア済み判定を chrome.storage.local で行う）
     [cartBtn, buyBtn].forEach(btn => {
       if (btn && !btn.dataset.diceAttached) {
         btn.dataset.diceAttached = "true";
         const productUrl = window.location.href;
 
-        // 旧: sessionStorage 直接比較 → 新: 非同期でストレージ確認
         isProductCleared(productUrl).then((cleared) => {
           if (!cleared) {
             btn.addEventListener("click", (e) => {
               e.preventDefault();
+              e.stopPropagation(); // イベントの伝播を止める
               initDiceFlow();
-            });
-          } else {
-            // クリア済みなら何もせず通常動作
+            }, true); // キャプチャフェーズでイベントを捕捉
           }
         });
       }
     });
-    // ★変更: ここまで
-
   });
   observer.observe(document.body, { childList: true, subtree: true });
 }
