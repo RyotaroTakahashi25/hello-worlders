@@ -1,16 +1,11 @@
-// ★ もとのAmazon商品URLを取得（index.html?product=... で渡される）
-const params = new URLSearchParams(window.location.search);
-const productUrl = params.get('product');
-const boss = (params.get('boss') || 'weak').toLowerCase(); // weak / mid / strong
-
 // HTML要素の取得
 const messageTextEl = document.getElementById('message-text');
 const typingAreaEl = document.getElementById('typing-area');
 const resultTextEl = document.getElementById('result-text');
 const restartButton = document.getElementById('restart-button');
 
-// ★本多変更: let にして差し替え可能に
-let words = [
+// ゲーム設定
+const words = [
     { jp: "商品", romaji: "shouhin" },
     { jp: "必要", romaji: "hitsuyou" },
     { jp: "衝動", romaji: "shoudou" },
@@ -25,63 +20,16 @@ let words = [
     { jp: "思考", romaji: "shikou" },
     { jp: "判断", romaji: "handan" }
 ];
-
-// ★本多追加: boss に応じて words を差し替える
-if (boss === "weak") {
-  // 小ボス: 短くて簡単
-  words = [
-    { jp: "水", romaji: "mizu" },
-    { jp: "火", romaji: "hi" },
-    { jp: "木", romaji: "ki" },
-    { jp: "本", romaji: "hon" },
-    { jp: "犬", romaji: "inu" },
-    { jp: "猫", romaji: "neko" },
-    { jp: "空", romaji: "sora" },
-    { jp: "海", romaji: "umi" },
-    { jp: "雨", romaji: "ame" },
-    { jp: "山", romaji: "yama" }
-  ];
-} else if (boss === "mid") {
-  // 中ボス: そこそこ長い
-  words = [
-    { jp: "節約", romaji: "setsuyaku" },
-    { jp: "貯金", romaji: "chokin" },
-    { jp: "判断", romaji: "handan" },
-    { jp: "購入", romaji: "kounyuu" },
-    { jp: "割引", romaji: "waribiki" },
-    { jp: "限定", romaji: "gentei" },
-    { jp: "計画", romaji: "keikaku" },
-    { jp: "慎重", romaji: "shinchou" },
-    { jp: "節度", romaji: "setsudo" },
-    { jp: "抑制", romaji: "yokusei" }
-  ];
-} else if (boss === "strong") {
-  // 大ボス: 長くて難しい
-  words = [
-    { jp: "衝動買い", romaji: "shoudougai" },
-    { jp: "優柔不断", romaji: "yuujyuufudan" },
-    { jp: "無意識的行動", romaji: "muishikitekikoudou" },
-    { jp: "経済的自由", romaji: "keizaitekijiyuu" },
-    { jp: "自己投資", romaji: "jikoutoushi" },
-    { jp: "消費行動", romaji: "shouhikoudou" },
-    { jp: "費用対効果", romaji: "hiyoutaikouka" },
-    { jp: "機会費用", romaji: "kikaihiyou" },
-    { jp: "長期的視点", romaji: "choukitekishiten" },
-    { jp: "合理的判断", romaji: "gouritekihandan" }
-  ];
-}
-
-// ★変更: 出題数を難易度ごとに調整（任意）
-const NUM_QUESTIONS =
-  boss === "strong" ? 7 :
-  boss === "mid" ? 6 : 5;
-
+const NUM_QUESTIONS = 10;
 let gameActive = false;
 let typedText = '';
 let currentQuestionIndex = 0;
 let currentWord = {};
 let questionOrder = [];
 
+// ★ もとのAmazon商品URLを取得（index.html?product=... で渡される）
+const params = new URLSearchParams(window.location.search);
+const productUrl = params.get('product');
 
 // ★ 商品キーを作成（/dp/ASIN を優先、無ければURL全体）
 const getProductKey = (url) => {

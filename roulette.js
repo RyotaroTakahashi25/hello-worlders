@@ -2,7 +2,9 @@ window.addEventListener("DOMContentLoaded", () => {
   const canvas = document.getElementById("roulette");
   const ctx = canvas.getContext("2d");
   const spinBtn = document.getElementById("spinBtn");
-
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const radius = centerX - 5; // 枠線のために少し小さく
   // クエリ読み取り（bossで色とキャラを変える）★本多追加
 const params = new URLSearchParams(window.location.search);
 const boss = (params.get("boss") || "weak").toLowerCase();
@@ -119,27 +121,70 @@ if (container) {
   let currentAngle = 0;
 
   // ルーレットを描画する関数
-  function drawRoulette() {
+// ルーレットを描画する関数 (豪華版に改造)
+  function drawRoulette(highlightIndex = -1) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     games.forEach((game, i) => {
       const angle = startAngle + i * arc;
-      ctx.fillStyle = colors[i];
+      
+      const isActive = i === highlightIndex;
+      ctx.fillStyle = isActive ? lightenColor(colors[i], 30) : colors[i];
+      
       ctx.beginPath();
-      ctx.arc(175, 175, 175, angle, angle + arc);
-      ctx.lineTo(175, 175);
+      ctx.arc(centerX, centerY, radius, angle, angle + arc);
+      ctx.lineTo(centerX, centerY);
       ctx.fill();
-
-      // テキストを描画
+      
       ctx.save();
-      ctx.fillStyle = "white";
-      ctx.font = "bold 16px sans-serif";
-      ctx.translate(175 + Math.cos(angle + arc / 2) * 120, 175 + Math.sin(angle + arc / 2) * 120);
-      ctx.rotate(angle + arc / 2 + Math.PI / 2);
-      ctx.fillText(game, -ctx.measureText(game).width / 2, 0);
+      ctx.strokeStyle = "#2c2c2c";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      ctx.fillStyle = isActive ? "#FFFF00" : "white";
+      ctx.font = "bold 18px 'Cinzel', sans-serif"; // 追加したフォントを適用
+      ctx.shadowColor = "black";
+      ctx.shadowBlur = 4;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      const textAngle = angle + arc / 2;
+      ctx.translate(
+        centerX + Math.cos(textAngle) * (radius * 0.65),
+        centerY + Math.sin(textAngle) * (radius * 0.65)
+      );
+      ctx.rotate(textAngle + Math.PI / 2);
+      ctx.fillText(game, 0, 0);
       ctx.restore();
     });
-  }
 
+    drawCenterGem();
+  }
+function drawCenterGem() {
+    ctx.beginPath();
+    const grad = ctx.createRadialGradient(centerX, centerY, 5, centerX, centerY, 35);
+    grad.addColorStop(0, '#8e44ad');
+    grad.addColorStop(0.5, '#c0392b');
+    grad.addColorStop(1, '#512a5b');
+    ctx.fillStyle = grad;
+    ctx.arc(centerX, centerY, 35, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.strokeStyle = "#4d4d4d"; // 濃いグレー
+    ctx.lineWidth = 4;
+    ctx.stroke();
+  }
+  
+  function lightenColor(hex, percent) {
+      hex = hex.replace(/^\s*#|\s*$/g, '');
+      if(hex.length == 3) hex = hex.replace(/(.)/g, '$1$1');
+      var r = parseInt(hex.substr(0, 2), 16),
+          g = parseInt(hex.substr(2, 2), 16),
+          b = parseInt(hex.substr(4, 2), 16);
+      return '#' +
+         ((0|(1<<8) + r + (256 - r) * percent / 100).toString(16)).substr(1) +
+         ((0|(1<<8) + g + (256 - g) * percent / 100).toString(16)).substr(1) +
+         ((0|(1<<8) + b + (256 - b) * percent / 100).toString(16)).substr(1);
+  }
   // 回転アニメーション
   function rotate() {
     // 緩やかに停止させるためのイージング
@@ -156,27 +201,36 @@ if (container) {
   }
 
  // 回転停止後の処理をページ移動に変更
+// 回転停止後の処理 (ハイライト演出を追加)
   function stopRotate() {
     const degrees = (startAngle * 180) / Math.PI + 90;
     const arcd = (arc * 180) / Math.PI;
     const index = Math.floor((360 - (degrees % 360)) / arcd);
-    const selectedGame = games[index];
-
-    // 選ばれたゲームに対応するファイル名を取得
-    const gameFile = gameFiles[selectedGame];
-
-    if (gameFile && productUrl) {
-      // ゲームページのURLを作成（このとき、元のAmazon商品URLもパラメータとして渡す）
-      const nextPageUrl = chrome.runtime.getURL(gameFile) + `?product=${encodeURIComponent(productUrl)}`;
-      
-      // ユーザーが結果を確認できるよう、1秒待ってからページを移動
-      setTimeout(() => {
-        window.location.href = nextPageUrl;
-      }, 1000); // 1秒の遅延
-    } else {
-      alert("エラー: ゲームファイルまたは元のURLが見つかりません。");
-      spinBtn.disabled = false;
-    }
+    
+    let highlightCount = 0;
+    const highlightInterval = setInterval(() => {
+        drawRoulette(highlightCount % 2 === 0 ? index : -1);
+        highlightCount++;
+        if (highlightCount > 5) { // 3回点滅
+            clearInterval(highlightInterval);
+            navigateToGame(games[index]);
+        }
+    }, 200);
+  }
+  
+  // ゲームページへ移動する関数
+  function navigateToGame(selectedGame) {
+      const gameFile = gameFiles[selectedGame];
+      if (gameFile && productUrl) {
+        const nextPageUrl = chrome.runtime.getURL(gameFile) + `?product=${encodeURIComponent(productUrl)}`;
+        // ユーザーが結果をしっかり確認できるよう、少し待ってからページを移動
+        setTimeout(() => {
+          window.location.href = nextPageUrl;
+        }, 500); // 0.5秒の遅延
+      } else {
+        alert("エラー: ゲームファイルまたは元のURLが見つかりません。");
+        spinBtn.disabled = false;
+      }
   }
 
   // イージング関数
