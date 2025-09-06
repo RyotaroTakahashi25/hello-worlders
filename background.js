@@ -24,7 +24,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true; // 非同期レスポンスを使うため
   }
 });
-const YOUR_OPENAI_API_KEY = "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";
+
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.action === "judgeReflection") {

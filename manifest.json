@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Amazon商品ページで貧乏神サイコロ演出付きミッション",
   "permissions": ["activeTab", "scripting","storage"],
-   "host_permissions": [
+  "host_permissions": [
     "https://api.openai.com/*"
   ],
   "background": {
