@@ -3,7 +3,7 @@ body {
   font-family: "Sawarabi Mincho", "Noto Serif JP", "Hiragino Mincho ProN",
                "Yu Mincho", "MS PMincho", serif; /* 和風フォント */
   text-align: center;
-  padding: 40px;
+  padding: 50px;
   background-color: #f0f2f5;
 }
 
@@ -19,7 +19,7 @@ h1 {
   position: relative;
   width: 350px;
   height: 350px;
-  margin: 30px auto;
+  margin: 30px 30px;
 }
 
 canvas {
@@ -35,7 +35,7 @@ canvas {
   height: 0;
   border-left: 15px solid transparent;
   border-right: 15px solid transparent;
-  border-top: 40px solid #e74c3c; /* 矢印の色 */
+  border-top: 40px solid #000000; /* 矢印の色 */
 }
 
 button {
@@ -44,11 +44,82 @@ button {
   font-size: 18px;
   cursor: pointer;
   border: none;
-  background-color: #3498db;
+  background-color: #000000;
   color: white;
   border-radius: 8px;
   transition: background-color 0.3s;
   font-family: "Sawarabi Mincho", "Noto Serif JP", serif; /* 和風ボタン */
+}
+
+button.flame {
+  position: relative;
+  isolation: isolate;              /* 疑似要素をボタン内のレイヤーに閉じ込める */
+  z-index: 0;
+  box-shadow: 0 0 0 1px #000 inset, 0 0 14px rgba(255,140,0,.25);
+  transition: transform .15s, box-shadow .2s;
+}
+
+/* 炎のグロー（広い発光＋赤～橙のにじみ） */
+button.flame::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  transform: translateX(-50%) scale(1);
+  width: 140%;
+  height: 160%;
+  pointer-events: none;
+  border-radius: 999px;
+  z-index: -1;
+  background:
+    radial-gradient(60% 70% at 50% 105%, rgba(255,210,120,.95), transparent 65%),
+    radial-gradient(70% 80% at 50% 115%, rgba(255,120,0,.85), transparent 70%),
+    radial-gradient(80% 90% at 50% 130%, rgba(255,50,0,.6), transparent 70%);
+  filter: blur(18px);
+  animation: flame-flicker 1.2s infinite ease-in-out alternate;
+  opacity: .95;
+}
+
+/* 炎の“舌”（中心でチロチロ動く部分） */
+button.flame::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  transform: translateX(-50%);
+  width: 18px;
+  height: 28px;
+  pointer-events: none;
+  z-index: -1;
+  /* 明るい芯→橙→赤の縦グラデ＋炎っぽい形状 */
+  background:
+    radial-gradient(60% 100% at 50% 100%,
+      rgba(255,240,210,.95) 0 42%,
+      rgba(255,165,0,.9) 43% 86%,
+      rgba(180,0,0,.0) 87%);
+  filter: blur(1.2px);
+  /* 炎の形（上下に尖る） */
+  clip-path: polygon(50% 0, 62% 35%, 56% 58%, 50% 100%, 44% 58%, 38% 35%);
+  animation: flame-lick .85s infinite cubic-bezier(.5,0,.5,1);
+  opacity: .9;
+}
+
+/* ゆらぎ */
+@keyframes flame-flicker {
+  0%   { transform: translateX(-50%) scaleX(1.00) scaleY(0.98); filter: blur(16px); }
+  100% { transform: translateX(-50%) scaleX(1.06) scaleY(1.06); filter: blur(20px); }
+}
+@keyframes flame-lick {
+  0%   { transform: translateX(-50%) translateY(1px) scaleY(1.00); }
+  100% { transform: translateX(-50%) translateY(-3px) scaleY(1.18); }
+}
+
+/* ちょいリッチなホバー効果（任意） */
+button.flame:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px #000 inset,
+              0 0 18px rgba(255,160,0,.35),
+              0 0 60px rgba(255, 90, 0, .25);
 }
 
 button:disabled {
@@ -82,4 +153,32 @@ button:disabled {
 .savings-counter {
   font-weight: bold;
   font-family: "Sawarabi Mincho", "Noto Serif JP", serif; /* 和風数字 */
+}
+
+/* === 横並びレイアウト（ルーレット＋キャラ） === */
+.game-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: nowrap; /* ← wrapを禁止して横並びを強制 */
+}
+
+/* === レスポンシブ微調整 === */
+@media (max-width: 780px) {
+  .game-wrapper { gap: 24px; }
+  #character-container { max-width: 220px; }
+  #character-container img { max-width: 180px; }
+}
+
+/* 子要素を縮ませず必ず横並びに */
+.roulette-container,
+#character-container {
+  flex: 0 0 auto;     /* ← shrinkしない・幅固定の挙動に */
+}
+
+/* 画面が狭い端末でも折り返さず横スクロールで逃がす */
+.game-wrapper {
+  overflow-x: auto;    /* ← 横スクロール許可 */
 }

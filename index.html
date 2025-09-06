@@ -9,12 +9,16 @@
   <h1>ミッションルーレット</h1>
   <p>ボタンを押して、挑戦するミニゲームを決めるのだ</p>
 
-  <div class="roulette-container">
-    <canvas id="roulette" width="350" height="350"></canvas>
-    <div class="arrow"></div>
+  <div class="game-wrapper">
+    <div class="roulette-container">
+      <canvas id="roulette" width="350" height="350"></canvas>
+      <div class="arrow"></div>
+    </div>
+
+    <div id="character-container"></div>
   </div>
 
-  <button id="spinBtn">ルーレットを回せ！</button>
+  <button id="spinBtn" class="flame">ルーレットを回せ！</button>
 
   <script src="roulette.js"></script>
 </body>
