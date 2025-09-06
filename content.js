@@ -1,5 +1,4 @@
 //★追加、GSAPの読み込み用
-// メーター機能の最終版サトーゴ
 (function ensureGSAP() {
   if (typeof gsap === "undefined") {
     console.warn("[dice-mission] GSAPが未ロードです。manifestのjs順序を確認してください。");
@@ -337,11 +336,29 @@ function showReflectionPopup(overlay) {
   });
 
   submitBtn.onclick = () => {
-    chrome.storage.local.set({ wastefulnessLevel: 0 }, () => {
-      alert("反省、しかと受け取った！これに懲りたら無駄遣いはやめるのじゃぞ！");
-      overlay.remove();
-    });
-  };
+  const text = textarea.value;
+  console.log("反省文送信:", text);
+
+  chrome.runtime.sendMessage({ action: "judgeReflection", text }, (response) => {
+    if (!response) {
+      console.error("background からの応答がありません！");
+      return;
+    }
+    const result = response.result;
+    console.log("AI判定結果:", result);
+
+    if (result === "OK") {
+      chrome.storage.local.set({ wastefulnessLevel: 0 }, () => {
+        alert("反省、しかと受け取った！これに懲りたら無駄遣いはやめるのじゃぞ！");
+        overlay.remove();
+      });
+    } else {
+      alert("そんな反省文で許されると思ったか！");
+    }
+  });
+};
+
+
 
   dialog.appendChild(submitBtn);
   overlay.appendChild(dialog);
