@@ -401,8 +401,6 @@ function showReflectionPopup(overlay) {
   title.innerHTML = "買い物カゴは、お前の欲望の墓場じゃ！<br>罰として、200文字で今日買ったものの必要性を説明して反省文を提出するんじゃな！";
   dialog.appendChild(title);
 
-  // ★【テスト用変更】テキストエリアと文字数カウンター、入力チェックを削除
-  /*
   const textarea = document.createElement("textarea");
   textarea.placeholder = "（この商品の必要性を200文字以上で記入…）";
   dialog.appendChild(textarea);
@@ -410,14 +408,11 @@ function showReflectionPopup(overlay) {
   const counter = document.createElement("p");
   counter.textContent = "0 / 200 文字";
   dialog.appendChild(counter);
-  */
   
   const submitBtn = document.createElement("button");
   submitBtn.textContent = "反省を完了する";
-  // ★【テスト用変更】ボタンを最初から有効にする
-  // submitBtn.disabled = true;
+  submitBtn.disabled = true;
 
-  /* ★【テスト用変更】文字数チェックのイベントリスナーを削除
   textarea.addEventListener("input", () => {
     const len = textarea.value.length;
     counter.textContent = `${len} / 200 文字`;
@@ -429,8 +424,6 @@ function showReflectionPopup(overlay) {
       counter.style.color = "";
     }
   });
-  */
-
 
   submitBtn.onclick = () => {
     const text = textarea.value;
@@ -455,7 +448,6 @@ function showReflectionPopup(overlay) {
   overlay.appendChild(dialog);
   gsap.fromTo(dialog, { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.7)" });
 }
-
 
 // ----- 吹き出し -----
 function showCharacterDialog(overlay, character, imgElement, roll, wastefulnessLevel) {
