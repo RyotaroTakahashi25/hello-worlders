@@ -18,11 +18,21 @@ const getProductKey = (url) => {
   }
 };
 
-// ★ 変更点: この関数を修正し、常にfalseを返すようにします
-// これにより、「クリア済み」のチェックが実質的に無効化され、毎回サイコロが出現します。
+// ★変更後: ストレージを確認してクリア済みか判定する関数
 function isProductCleared(url) {
   return new Promise((resolve) => {
-    resolve(false); // 常に「クリアしていない」という結果を返す
+    // ページURLから商品固有のキーを取得
+    const productKey = getProductKey(url);
+    
+    // ストレージから「clearedProducts」というキーで保存されたリストを取得
+    chrome.storage.local.get({ clearedProducts: [] }, (data) => {
+      // リストに現在の商品キーが含まれているかチェック
+      if (data.clearedProducts.includes(productKey)) {
+        resolve(true); // 含まれていれば「クリア済み(true)」
+      } else {
+        resolve(false); // 含まれていなければ「未クリア(false)」
+      }
+    });
   });
 }
 
@@ -502,6 +512,16 @@ function showCharacterDialog(overlay, character, imgElement, roll, wastefulnessL
 
 // ----- 流れ開始 -----
 function initDiceFlow() {
+  // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+  // ★ 追加: ゲーム開始時に、この商品を「クリア済み」として記録する
+  // ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
+  const productKey = getProductKey(window.location.href);
+  chrome.storage.local.get({ clearedProducts: [] }, (data) => {
+    // 既存のリストに新しい商品キーを追加（重複は避ける）
+    const newClearedProducts = [...new Set([...data.clearedProducts, productKey])];
+    chrome.storage.local.set({ clearedProducts: newClearedProducts });
+  });
+
   // ストレージから現在の浪費レベルを取得 (なければ0)
   chrome.storage.local.get({ wastefulnessLevel: 0 }, ({ wastefulnessLevel }) => {
     const overlay = createOverlay();
