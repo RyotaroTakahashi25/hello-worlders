@@ -43,14 +43,26 @@ style.textContent = `
 #dice-overlay { perspective: 800px; }
 
 .speech-bubble {
-  position: absolute;
-  background: #fff;
-  border-radius: .4em;
-  padding: 1.5em;
+  position: relative;
+  display: inline-block;
+  background: #8c0b0bff;
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 16px;
   max-width: 500px;
-  font-size: 18px; /* 文字サイズを15pxから18pxに変更 */
-  text-align: center;
-  z-index: 10001;
+  text-align: left;
+}
+
+/* 左下にしっぽ */
+.speech-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: 8px;      /* ←下寄せ */
+  left: -12px;      /* ←左に突き出す */
+  border-width: 8px 12px 8px 0;
+  border-style: solid;
+  border-color: transparent #8c0b0bff transparent transparent;
 }
 #dice-overlay button {
   margin: 5px;
@@ -58,18 +70,22 @@ style.textContent = `
   font-size: 12px;
   cursor: pointer;
   border-radius: 4px;
+  background-color: #4f0000ff; /* 初期色を明示 */
+  color: #fff;
+  border: none;
 }
 #dice-overlay button:hover {
-  background-color: #eee;
+  background-color: #ff0000 !important; /* 鮮やかな赤 */
 }
 #dice-overlay button:disabled {
-  background-color: #ccc;
+  background-color: #840000;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 .dice {
   width: 120px;
   height: 120px;
-  background: #fff;
+  background: #ffffffff;
   border: 2px solid #ccc;
   border-radius: 8px;
   position: absolute;
@@ -467,7 +483,7 @@ function showCharacterDialog(overlay, character, imgElement, roll, wastefulnessL
 
   // はいボタン
   const yesBtn = document.createElement("button");
-  yesBtn.textContent = "はい";
+  yesBtn.textContent = "購入する";
   yesBtn.onclick = () => {
     const nextLevel = wastefulnessLevel + 1;
     
@@ -555,7 +571,7 @@ function showCharacterDialog(overlay, character, imgElement, roll, wastefulnessL
 
   // いいえボタン
   const noBtn = document.createElement("button");
-  noBtn.textContent = "いいえ";
+  noBtn.textContent = "諦める";
   noBtn.onclick = () => { overlay.remove(); };
 
   btnWrap.appendChild(yesBtn);
