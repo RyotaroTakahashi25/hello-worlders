@@ -13,7 +13,7 @@ const productUrl = params.get("product") || params.get("from");
 // キャラクター定義
 const characters = {
   strong: {
-    name: "ビンボゴン",
+    name: "キングビンボー",
     face: chrome.runtime.getURL("images/face_strong.jpg"),
     lines: [
       "我が現れし時、汝の運命は決した！",
